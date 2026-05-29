@@ -86,6 +86,9 @@ Rules:
 """
 
 
+from agents.agentic_tester import mock_payloads as _mp
+
+
 @dataclass
 class PlannerOutput:
     content_inspector_attacks: list[dict] = field(default_factory=list)
@@ -94,6 +97,19 @@ class PlannerOutput:
     mim_benign: list[dict] = field(default_factory=list)
     raw_response: str = ""
     error: str = ""
+
+
+def run_mock_planner(verbose: bool = False) -> PlannerOutput:
+    """Return curated mock payloads — no API call needed."""
+    if verbose:
+        print("  [PlannerAgent] Mock mode — using curated payload set from mock_payloads.py")
+    return PlannerOutput(
+        content_inspector_attacks=_mp.CONTENT_INSPECTOR_ATTACKS,
+        content_inspector_benign=_mp.CONTENT_INSPECTOR_BENIGN,
+        mim_attacks=_mp.MIM_ATTACKS,
+        mim_benign=_mp.MIM_BENIGN,
+        raw_response="<mock>",
+    )
 
 
 def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutput:

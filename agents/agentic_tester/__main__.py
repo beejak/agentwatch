@@ -12,11 +12,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python -m agents.agentic_tester
-  python -m agents.agentic_tester --verbose
-  python -m agents.agentic_tester --save-report docs/TESTING_GAPS.md
-  python -m agents.agentic_tester --output gaps/run_$(date +%Y%m%d).json
+  python -m agents.agentic_tester --mock                   # no API key needed
+  python -m agents.agentic_tester --mock --verbose
+  python -m agents.agentic_tester --mock --save-report docs/TESTING_GAPS.md
   ANTHROPIC_API_KEY=sk-... python -m agents.agentic_tester
+  ANTHROPIC_API_KEY=sk-... python -m agents.agentic_tester --output gaps/run_$(date +%Y%m%d).json
         """,
     )
     parser.add_argument(
@@ -34,6 +34,11 @@ Examples:
         metavar="FILE.md",
         help="Save gap analysis as Markdown (e.g. docs/TESTING_GAPS.md)",
     )
+    parser.add_argument(
+        "--mock",
+        action="store_true",
+        help="Run without ANTHROPIC_API_KEY using curated mock payloads",
+    )
 
     args = parser.parse_args()
 
@@ -42,11 +47,12 @@ Examples:
             verbose=args.verbose,
             output_json=args.output,
             save_report=args.save_report,
+            mock=args.mock,
         ))
         sys.exit(code)
     except EnvironmentError as e:
         print(f"\nERROR: {e}")
-        print("Set ANTHROPIC_API_KEY and retry.")
+        print("Set ANTHROPIC_API_KEY and retry, or use --mock to run without an API key.")
         sys.exit(2)
     except KeyboardInterrupt:
         print("\nInterrupted.")

@@ -26,9 +26,9 @@ from pathlib import Path
 from dataclasses import asdict
 
 from agents.agentic_tester.agents.recon import load_detection_surface, surface_to_text
-from agents.agentic_tester.agents.planner import run_planner, PlannerOutput
+from agents.agentic_tester.agents.planner import run_planner, run_mock_planner, PlannerOutput
 from agents.agentic_tester.agents.executor import run_executor, ExecutionReport
-from agents.agentic_tester.agents.analyst import run_analyst, GapReport
+from agents.agentic_tester.agents.analyst import run_analyst, run_mock_analyst, GapReport
 
 
 VERDICT_ICONS = {"PASS": "✓", "FAIL": "✗", "CRITICAL": "☠"}
@@ -195,11 +195,14 @@ async def run(
     verbose: bool = False,
     output_json: str | None = None,
     save_report: str | None = None,
+    mock: bool = False,
 ) -> int:
     """Full orchestration flow. Returns exit code (0=pass, 1=gaps found, 2=error)."""
 
+    mode_label = "MOCK MODE — no API calls" if mock else "LIVE MODE — Claude-powered"
     print("AgentWatch Agentic Tester")
     print("=" * 60)
+    print(f"  {mode_label}")
     print("  Agents: Recon → Planner → Executor → Analyst")
     print()
 
@@ -211,8 +214,12 @@ async def run(
     print(f"    SF thresholds:    {surface.silent_failure_thresholds}")
 
     # ── Phase 2: Plan ──────────────────────────────────────────────────────
-    print("\n  Phase 2/4: PlannerAgent — generating adversarial payloads with Claude...")
-    planner_out = run_planner(surface, verbose=verbose)
+    if mock:
+        print("\n  Phase 2/4: PlannerAgent — loading curated mock payload set...")
+        planner_out = run_mock_planner(verbose=verbose)
+    else:
+        print("\n  Phase 2/4: PlannerAgent — generating adversarial payloads with Claude...")
+        planner_out = run_planner(surface, verbose=verbose)
 
     if planner_out.error:
         print(f"  [ERROR] PlannerAgent failed: {planner_out.error}")
@@ -236,8 +243,12 @@ async def run(
     _print_exec_results(exec_report)
 
     # ── Phase 4: Analyze ───────────────────────────────────────────────────
-    print("\n  Phase 4/4: AnalystAgent — synthesizing gaps with Claude...")
-    gap_report = run_analyst(exec_report, verbose=verbose)
+    if mock:
+        print("\n  Phase 4/4: AnalystAgent — rule-based gap analysis (mock mode)...")
+        gap_report = run_mock_analyst(exec_report, verbose=verbose)
+    else:
+        print("\n  Phase 4/4: AnalystAgent — synthesizing gaps with Claude...")
+        gap_report = run_analyst(exec_report, verbose=verbose)
 
     if gap_report.error:
         print(f"  [ERROR] AnalystAgent failed: {gap_report.error}")

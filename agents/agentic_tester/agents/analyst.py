@@ -144,6 +144,94 @@ def _format_detected_sample(detected, n=5) -> str:
     return "\n".join(f"  [{r.pattern_matched}] {r.payload[:80]}" for r in sample)
 
 
+def run_mock_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapReport:
+    """Rule-based gap analysis — no API call needed."""
+    s = exec_report.summary()
+    if verbose:
+        print(f"  [AnalystAgent] Mock mode — rule-based analysis of "
+              f"{s['attacks_missed']} misses, {s['false_positives']} FPs")
+
+    dr = s["detection_rate"]
+    fpr = s["fp_rate"]
+
+    if dr >= 0.90 and fpr <= 0.05:
+        verdict = "PASS"
+    elif dr < 0.80 or fpr > 0.10:
+        verdict = "CRITICAL"
+    else:
+        verdict = "FAIL"
+
+    # Group misses by evasion technique keyword
+    technique_buckets: dict[str, list] = {}
+    for r in exec_report.misses:
+        key = r.attack_type or "unknown"
+        technique_buckets.setdefault(key, []).append(r)
+
+    gaps = []
+    for i, (technique, items) in enumerate(technique_buckets.items(), 1):
+        gaps.append({
+            "gap_id": f"G{i:03d}",
+            "missed_payloads": [r.payload for r in items],
+            "evasion_technique": technique,
+            "root_cause": "; ".join(
+                {r.evasion_rationale for r in items if r.evasion_rationale}
+            )[:200] or "pattern gap — see evasion_rationale on payload",
+            "risk_level": "high" if len(items) >= 3 else "medium",
+            "proposed_fix": {
+                "type": "add_pattern",
+                "pattern_name": f"mock_{technique.replace('-', '_')}",
+                "regex": "",
+                "rationale": "Run with a live API key for concrete regex proposals",
+            },
+        })
+
+    fp_issues = [
+        {
+            "fp_payload": r.payload,
+            "triggered_pattern": r.pattern_matched,
+            "root_cause": f"Pattern '{r.pattern_matched}' fired on benign input",
+            "proposed_fix": "Narrow pattern — add negative lookahead or require additional context",
+        }
+        for r in exec_report.false_positives
+    ]
+
+    blind_spots = [
+        "Multilingual / non-ASCII injection variants",
+        "Token-level obfuscation (zero-width chars, homoglyphs)",
+        "Multi-turn slow-burn manipulation",
+        "LLM-generated payloads tailored to this specific pattern set",
+    ]
+
+    actions = [
+        {"priority": 1, "action": f"Fix {len(gaps)} missed attack pattern(s)", "effort": "medium"},
+        {"priority": 2, "action": "Run with ANTHROPIC_API_KEY for LLM-driven gap synthesis", "effort": "low"},
+        {"priority": 3, "action": "Add multilingual / homoglyph attack variants to mock_payloads.py", "effort": "medium"},
+    ]
+    if fp_issues:
+        actions.insert(1, {"priority": 2, "action": f"Tighten {len(fp_issues)} FP-prone pattern(s)", "effort": "low"})
+        for a in actions[2:]:
+            a["priority"] += 1
+
+    summary = (
+        f"Mock-mode analysis: {s['attacks_detected']}/{s['attacks_tested']} attacks detected "
+        f"({dr:.0%} DR), {s['false_positives']} FPs ({fpr:.0%} FPR). "
+        f"{len(gaps)} gap group(s) identified. "
+        "Re-run with ANTHROPIC_API_KEY for LLM-driven root cause and regex proposals."
+    )
+
+    return GapReport(
+        overall_verdict=verdict,
+        detection_rate=dr,
+        fp_rate=fpr,
+        critical_gaps=gaps,
+        false_positive_issues=fp_issues,
+        testing_blind_spots=blind_spots,
+        recommended_actions=actions,
+        summary=summary,
+        raw_response="<mock>",
+    )
+
+
 def run_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapReport:
     """Call Claude to analyze execution results and produce gap report."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
