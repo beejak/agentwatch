@@ -39,21 +39,23 @@ async def attribute_failure(
     Attribute a coordination failure to the specific agent and MAST category.
     Uses coordination signature matching to identify the failure pattern.
     """
+    def _get(s, key, default=None):
+        return s.get(key, default) if isinstance(s, dict) else getattr(s, key, default)
+
     lib = library or CoordSignatureLibrary()
     if not lib._loaded:
         await lib.load()
     matches = await lib.match_topology(spans)
 
     # Find the primary failing span
-    error_spans = [s for s in spans if getattr(s, "status", "") == "error"]
+    error_spans = [s for s in spans if _get(s, "status", "") == "error"]
     failing_agent = "unknown"
     failing_action = "unknown"
 
     if error_spans:
-        # Pick the first error span
         failing_span = error_spans[0]
-        failing_agent = getattr(failing_span, "agent_id", "unknown")
-        failing_action = getattr(failing_span, "action", "unknown")
+        failing_agent = _get(failing_span, "agent_id", "unknown")
+        failing_action = _get(failing_span, "action", "unknown")
 
     # Determine call tree depth
     call_tree_depth = _calc_depth(spans)
@@ -62,7 +64,7 @@ async def attribute_failure(
     mast_matches = [m for m in matches if m.category.startswith("mast_")]
 
     # Prefer category 2 (alignment) when there are error spans and multiple agent IDs
-    agent_ids = {getattr(s, "agent_id", "") for s in spans}
+    agent_ids = {_get(s, "agent_id", "") for s in spans}
     if error_spans and len(agent_ids) > 1:
         mast2 = [m for m in mast_matches if m.category == "mast_alignment"]
         if mast2:
@@ -100,14 +102,16 @@ async def attribute_failure(
 
 def _calc_depth(spans: list) -> int:
     """Calculate maximum call tree depth."""
-    span_by_id = {getattr(s, "span_id", ""): s for s in spans}
+    def _get(s, key, default=None):
+        return s.get(key, default) if isinstance(s, dict) else getattr(s, key, default)
+    span_by_id = {_get(s, "span_id", ""): s for s in spans}
     max_depth = 0
     for s in spans:
         depth = 1
         current = s
         visited = set()
         while True:
-            pid = getattr(current, "parent_span_id", None)
+            pid = _get(current, "parent_span_id", None)
             if not pid or pid in visited or pid not in span_by_id:
                 break
             visited.add(pid)

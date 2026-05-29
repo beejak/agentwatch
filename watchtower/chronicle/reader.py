@@ -25,7 +25,7 @@ class ChronicleReader:
             result = self._client.query(
                 "SELECT trace_id, span_id, parent_span_id, agent_id, action, status, "
                 "toUnixTimestamp64Milli(timestamp)/1000.0 AS timestamp, duration_ms, "
-                "tokens_in, tokens_out, model, cost, summary "
+                "tokens_in, tokens_out, model, cost, process_guid, summary "
                 "FROM watchtower.agent_spans "
                 "WHERE trace_id = {trace_id:String} "
                 "ORDER BY timestamp ASC",
@@ -34,7 +34,7 @@ class ChronicleReader:
             cols = [
                 "trace_id", "span_id", "parent_span_id", "agent_id", "action",
                 "status", "timestamp", "duration_ms", "tokens_in", "tokens_out",
-                "model", "cost", "summary"
+                "model", "cost", "process_guid", "summary"
             ]
             return [_to_dict(row, cols) for row in result.result_rows]
         except Exception as e:
@@ -103,6 +103,26 @@ class ChronicleReader:
             logger.error("get_silent_failures error: %s", e)
             return []
 
+    async def get_host_telemetry(self, trace_id: str) -> list[dict]:
+        """Return host telemetry events for a specific trace, including process_guid."""
+        if not self._client:
+            return []
+        try:
+            result = self._client.query(
+                "SELECT trace_id, agent_id, "
+                "toUnixTimestamp64Milli(timestamp)/1000.0 AS ts, "
+                "event_type, process_guid, details "
+                "FROM watchtower.host_telemetry "
+                "WHERE trace_id = {trace_id:String} "
+                "ORDER BY timestamp ASC",
+                parameters={"trace_id": trace_id},
+            )
+            cols = ["trace_id", "agent_id", "timestamp", "event_type", "process_guid", "details"]
+            return [_to_dict(row, cols) for row in result.result_rows]
+        except Exception as e:
+            logger.error("get_host_telemetry error: %s", e)
+            return []
+
     async def get_event_stream(self, event_type: str, since: float) -> list[dict]:
         """Return events of a given type since a timestamp."""
         if not self._client:
@@ -124,15 +144,28 @@ class ChronicleReader:
 
         try:
             since_dt = datetime.fromtimestamp(since, tz=timezone.utc)
-            result = self._client.query(
-                f"SELECT trace_id, agent_id, "
-                f"toUnixTimestamp64Milli(timestamp)/1000.0 AS timestamp, details "
-                f"FROM {table} "
-                f"WHERE timestamp >= {{since:DateTime64(3, 'UTC')}} "
-                f"ORDER BY timestamp ASC",
-                parameters={"since": since_dt},
-            )
-            cols = ["trace_id", "agent_id", "timestamp", "details"]
+            # host_telemetry needs process_guid for SC3 cross-layer correlation
+            if event_type == "host_telemetry":
+                result = self._client.query(
+                    f"SELECT trace_id, agent_id, "
+                    f"toUnixTimestamp64Milli(timestamp)/1000.0 AS timestamp, "
+                    f"event_type, process_guid, details "
+                    f"FROM {table} "
+                    f"WHERE timestamp >= {{since:DateTime64(3, 'UTC')}} "
+                    f"ORDER BY timestamp ASC",
+                    parameters={"since": since_dt},
+                )
+                cols = ["trace_id", "agent_id", "timestamp", "event_type", "process_guid", "details"]
+            else:
+                result = self._client.query(
+                    f"SELECT trace_id, agent_id, "
+                    f"toUnixTimestamp64Milli(timestamp)/1000.0 AS timestamp, details "
+                    f"FROM {table} "
+                    f"WHERE timestamp >= {{since:DateTime64(3, 'UTC')}} "
+                    f"ORDER BY timestamp ASC",
+                    parameters={"since": since_dt},
+                )
+                cols = ["trace_id", "agent_id", "timestamp", "details"]
             return [_to_dict(row, cols) for row in result.result_rows]
         except Exception as e:
             logger.error("get_event_stream error for %s: %s", event_type, e)

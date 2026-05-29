@@ -24,6 +24,11 @@ async def get_analyst_report(trace_id: str):
 
     if analyst:
         analyst.load_spans(trace_id, spans)
+        # Load host telemetry for SC3 cross-layer detection
+        if reader and hasattr(reader, "get_host_telemetry"):
+            trace_host = await reader.get_host_telemetry(trace_id)
+            if trace_host:
+                analyst.load_host_telemetry(trace_id, trace_host)
         sc1 = (await analyst.attribute_failure(trace_id)).model_dump()
         sc2 = (await analyst.detect_silent_failure(trace_id)).model_dump()
         sc3 = (await analyst.check_cross_layer(trace_id)).model_dump()

@@ -5,9 +5,14 @@ from collections import Counter
 from typing import Optional
 
 
+def _g(s, key, default=None):
+    """Get field from Signal object or dict span."""
+    return s.get(key, default) if isinstance(s, dict) else getattr(s, key, default)
+
+
 def _count_repeating_summaries(spans: list) -> tuple[str, int]:
     """Return (most_common_summary, count)."""
-    summaries = [getattr(s, "summary", "") for s in spans if getattr(s, "summary", "")]
+    summaries = [_g(s, "summary", "") for s in spans if _g(s, "summary", "")]
     if not summaries:
         return ("", 0)
     counter = Counter(summaries)
@@ -22,7 +27,7 @@ def _detect_parallel_workers(spans: list) -> dict[str, list]:
     """
     parents: dict[str, list] = {}
     for s in spans:
-        pid = getattr(s, "parent_span_id", None)
+        pid = _g(s, "parent_span_id", None)
         if pid:
             parents.setdefault(pid, []).append(s)
     # Filter to groups with > 1 child
@@ -31,7 +36,7 @@ def _detect_parallel_workers(spans: list) -> dict[str, list]:
 
 def _detect_sequential_chain_depth(spans: list) -> int:
     """Count the longest sequential chain (depth) via parent_span_id links."""
-    span_by_id: dict[str, object] = {getattr(s, "span_id", ""): s for s in spans}
+    span_by_id: dict[str, object] = {_g(s, "span_id", ""): s for s in spans}
     max_depth = 0
 
     for s in spans:
@@ -39,7 +44,7 @@ def _detect_sequential_chain_depth(spans: list) -> int:
         current = s
         visited = set()
         while True:
-            pid = getattr(current, "parent_span_id", None)
+            pid = _g(current, "parent_span_id", None)
             if not pid or pid in visited or pid not in span_by_id:
                 break
             visited.add(pid)
@@ -56,17 +61,17 @@ def match_signatures(spans: list, signatures: list[dict]) -> list[tuple[dict, fl
     Returns list of (signature, confidence, matched_agents).
     """
     results = []
-    agent_ids = list({getattr(s, "agent_id", "unknown") for s in spans})
+    agent_ids = list({_g(s, "agent_id", "unknown") for s in spans})
 
     # Pre-compute features
-    total_cost = sum(getattr(s, "cost", 0.0) for s in spans)
+    total_cost = sum(_g(s, "cost", 0.0) for s in spans)
     span_count = len(spans)
-    error_spans = [s for s in spans if getattr(s, "status", "") == "error"]
+    error_spans = [s for s in spans if _g(s, "status", "") == "error"]
     has_errors = len(error_spans) > 0
     _, max_repeat = _count_repeating_summaries(spans)
     parallel_groups = _detect_parallel_workers(spans)
     sequential_depth = _detect_sequential_chain_depth(spans)
-    framework_faults = sum(1 for s in spans if getattr(s, "framework_fault", False))
+    framework_faults = sum(1 for s in spans if _g(s, "framework_fault", False))
 
     for sig in signatures:
         signals = sig.get("detection_signals", [])
@@ -79,7 +84,7 @@ def match_signatures(spans: list, signatures: list[dict]) -> list[tuple[dict, fl
             if signal == "span_count_exceeds_50" and span_count > 50:
                 matched_signals += 1
             elif signal == "same_action_repeated_gt_5_times":
-                actions = Counter(getattr(s, "action", "") for s in spans)
+                actions = Counter(_g(s, "action", "") for s in spans)
                 if actions and actions.most_common(1)[0][1] > 5:
                     matched_signals += 1
             elif signal == "cost_anomaly_ratio_gt_10" and total_cost > 0.10:
@@ -100,7 +105,7 @@ def match_signatures(spans: list, signatures: list[dict]) -> list[tuple[dict, fl
                 matched_signals += 1
             elif signal == "no_parent_span_references_downstream":
                 # Check if there are spans with no parent (orphaned)
-                no_parent = sum(1 for s in spans if not getattr(s, "parent_span_id", None))
+                no_parent = sum(1 for s in spans if not _g(s, "parent_span_id", None))
                 if no_parent == span_count:  # All are top-level → no feedback path
                     matched_signals += 1
             elif signal == "framework_fault_true" and framework_faults > 0:
@@ -109,8 +114,8 @@ def match_signatures(spans: list, signatures: list[dict]) -> list[tuple[dict, fl
                 # Check if multiple agents called same action
                 agent_actions: dict[str, set] = {}
                 for s in spans:
-                    aid = getattr(s, "agent_id", "")
-                    act = getattr(s, "action", "")
+                    aid = _g(s, "agent_id", "")
+                    act = _g(s, "action", "")
                     agent_actions.setdefault(aid, set()).add(act)
                 all_actions = [a for actions in agent_actions.values() for a in actions]
                 if len(all_actions) != len(set(all_actions)):

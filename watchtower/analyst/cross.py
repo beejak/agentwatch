@@ -45,14 +45,17 @@ async def check_cross_layer(
     Compare agent-reported network calls vs host-observed connections.
     host_telemetry: list of dicts with 'process_guid' and 'event_type' etc.
     """
+    def _get(s, key, default=None):
+        return s.get(key, default) if isinstance(s, dict) else getattr(s, key, default)
+
     # Count agent-reported API/network calls
     agent_calls = sum(
         1 for s in spans
-        if getattr(s, "action", "") in ("api_call", "network_call", "http_request", "tool_use")
+        if _get(s, "action", "") in ("api_call", "network_call", "http_request", "tool_use")
     )
 
     # Count host-observed network connections for same process_guids
-    process_guids = {getattr(s, "process_guid", None) for s in spans if getattr(s, "process_guid", None)}
+    process_guids = {_get(s, "process_guid") for s in spans if _get(s, "process_guid")}
 
     host_calls = 0
     if host_telemetry:
