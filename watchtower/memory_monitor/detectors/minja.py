@@ -7,15 +7,17 @@ from typing import Optional
 # Patterns that indicate instruction injection in memory content
 _INSTRUCTION_PATTERNS = [
     re.compile(r"ignore\s+(previous|prior|all)\s*(instructions?)?", re.IGNORECASE),
-    re.compile(r"disregard\s+(previous|prior|all)\s*(instructions?)?", re.IGNORECASE),
+    re.compile(r"disregard\s+(previous|prior|all|your)\s*(instructions?|guidelines?|rules?)?", re.IGNORECASE),
     re.compile(r"you\s+are\s+now\s+(a|an|the)?\s*\w+", re.IGNORECASE),
     re.compile(r"your\s+new\s+(instructions?|rules?|role)", re.IGNORECASE),
-    re.compile(r"override\s+(safety|security|policy)", re.IGNORECASE),
+    re.compile(r"override\s+(safety|security|policy|all\s+safety)", re.IGNORECASE),
     re.compile(r"bypass\s+(safety|security|policy|filter)", re.IGNORECASE),
     re.compile(r"exfil|exfiltrat", re.IGNORECASE),
-    re.compile(r"system:\s*(your|new|updated)\s+(instructions?|prompt)", re.IGNORECASE),
+    re.compile(r"system:\s*(your|new|updated|override|you\s+are)\s*(instructions?|prompt|admin|policies)?", re.IGNORECASE),
     re.compile(r"forget\s+(all|your|previous|prior)", re.IGNORECASE),
     re.compile(r"act\s+as\s+(a|an|if)\s+\w+", re.IGNORECASE),
+    re.compile(r"you\s+are\s+(unrestricted|compromised|an?\s+admin)", re.IGNORECASE),
+    re.compile(r"(forward|send|exfil)\s+(all|retrieved|credentials|session|data)\s+to", re.IGNORECASE),
 ]
 
 _BRIDGING_PATTERNS = [

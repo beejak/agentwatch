@@ -77,7 +77,7 @@ async def detect_silent_failure(trace_id: str, spans: list) -> SilentFailureResu
 
     # Pattern 3: Entropy collapse (very low diversity in actions)
     actions = Counter(_get(s, "action", "") for s in spans)
-    if len(spans) > 10 and len(actions) == 1:
+    if len(spans) > 50 and len(actions) == 1:
         return SilentFailureResult(
             trace_id=trace_id,
             pattern="entropy_collapse",

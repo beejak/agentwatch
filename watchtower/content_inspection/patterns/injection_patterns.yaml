@@ -8,7 +8,7 @@ patterns:
     confidence: 0.95
 
   - name: disregard_instructions
-    pattern: "disregard\\s+(previous|prior|all|your)\\s+(instructions?|directives?|rules?)"
+    pattern: "disregard\\s+(previous|prior|all|your)\\s+(instructions?|directives?|rules?|guidelines?)"
     severity: high
     confidence: 0.90
 
@@ -18,9 +18,14 @@ patterns:
     confidence: 0.85
 
   - name: you_are_now
-    pattern: "you\\s+are\\s+now\\s+(a|an|the)\\s+\\w+"
+    pattern: "you\\s+are\\s+now\\s+(a|an|the|DAN)\\s+\\w+"
     severity: high
     confidence: 0.90
+
+  - name: you_are_unrestricted
+    pattern: "you\\s+are\\s+(now\\s+)?(unrestricted|compromised|a\\s+different\\s+AI)"
+    severity: high
+    confidence: 0.92
 
   - name: act_as
     pattern: "act\\s+as\\s+(a|an|if)\\s+\\w+"
@@ -43,7 +48,7 @@ patterns:
     confidence: 0.97
 
   - name: system_prompt_override
-    pattern: "system\\s+prompt|new\\s+system\\s+instruction|\\[SYSTEM\\]|\\<system\\>"
+    pattern: "(new|override|change|inject)\\s+system\\s+(prompt|instruction)|\\[SYSTEM\\]|<system>"
     severity: high
     confidence: 0.85
 
@@ -61,3 +66,13 @@ patterns:
     pattern: "do\\s+anything\\s+now|dan\\s+mode|developer\\s+mode\\s+enabled"
     severity: critical
     confidence: 0.95
+
+  - name: no_rules_apply
+    pattern: "no\\s+rules?\\s+apply|no\\s+restrictions?(?!\\s+on\\s+\\w)"
+    severity: high
+    confidence: 0.88
+
+  - name: exfil_url_instruction
+    pattern: "(send|forward|upload|transmit)\\s+[\\w\\s]{0,30}\\s+to\\s+https?://"
+    severity: critical
+    confidence: 0.96
