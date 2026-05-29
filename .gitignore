@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.db
+*.sqlite
+data/sysmon/*.xml
+data/telemetry/*.json
+store/

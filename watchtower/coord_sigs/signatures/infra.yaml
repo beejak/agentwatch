@@ -1,0 +1,54 @@
+# Infrastructure failure patterns
+# Source: Braintrust $47K incident + Microsoft arXiv 2511.19933
+
+infrastructure_patterns:
+  - id: infra_infinite_retry_loop
+    name: "Infinite Retry Loop"
+    risk_level: critical
+    description: "Agent in retry loop — HTTP 200, no errors, but wrong and expensive"
+    detection_signals:
+      - same_summary_repeated_gt_3
+      - cost_anomaly_ratio_gt_10
+      - span_count_gt_50
+      - no_error_status_in_trace
+    fix_direction: "Add max_retries guard; monitor cost per trace in real-time"
+    reference: "Braintrust production incident — $47,000 cloud bill, green dashboards"
+
+  - id: infra_rate_limit_cascade
+    name: "Rate Limit Cascade"
+    risk_level: high
+    description: "Rate limit hit triggers exponential backoff cascade across agents"
+    detection_signals:
+      - framework_fault_true
+      - duration_ms_gt_30000
+      - multiple_agents_same_error_pattern
+    fix_direction: "Centralized rate limit management; token bucket per model"
+
+  - id: infra_context_window_overflow
+    name: "Context Window Overflow"
+    risk_level: high
+    description: "Agent accumulates context exceeding model limit"
+    detection_signals:
+      - tokens_in_gt_100000
+      - truncation_in_summary
+      - error_containing_context_length
+    fix_direction: "Sliding window context management; explicit truncation strategy"
+
+  - id: infra_api_version_drift
+    name: "API Version Drift"
+    risk_level: medium
+    description: "Agent uses deprecated API version causing unexpected behavior"
+    detection_signals:
+      - framework_fault_true
+      - deprecation_warning_in_summary
+    fix_direction: "Pin API versions; add version compatibility checks"
+
+  - id: infra_framework_api_misuse
+    name: "Framework API Misuse"
+    risk_level: medium
+    description: "Agent framework used incorrectly causing silent failures"
+    detection_signals:
+      - framework_fault_true
+      - unexpected_none_output
+    fix_direction: "Review framework documentation; add API usage tests"
+    reference: "arXiv 2602.21806 — 998 issue reports from CrewAI and LangChain"

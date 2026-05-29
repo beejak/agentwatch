@@ -1,0 +1,139 @@
+# MAST Taxonomy — 14 failure modes from NeurIPS 2025 Spotlight paper
+# arXiv 2503.13657 — Cohen's Kappa 0.88, 1642 annotated traces
+
+category_1_specification:
+  description: "Specification and design failures (41.8% of production failures)"
+  signatures:
+    - id: mast_c1_task_misinterpretation
+      name: "Task Misinterpretation"
+      risk_level: high
+      description: "Agent misunderstands the core task objective"
+      detection_signals:
+        - output_unrelated_to_input
+        - high_step_count_with_wrong_direction
+      fix_direction: "Clarify task specification; add explicit success criteria"
+
+    - id: mast_c1_role_ambiguity
+      name: "Role Ambiguity"
+      risk_level: medium
+      description: "Multiple agents with overlapping or undefined responsibilities"
+      detection_signals:
+        - duplicate_tool_calls_across_agents
+        - conflicting_outputs_same_domain
+      fix_direction: "Define explicit agent responsibilities; add role manifest"
+
+    - id: mast_c1_poor_decomposition
+      name: "Poor Task Decomposition"
+      risk_level: high
+      description: "Task broken into subtasks that cannot be independently completed"
+      detection_signals:
+        - circular_dependencies_in_handoffs
+        - subtask_failure_cascade
+      fix_direction: "Redesign decomposition; ensure subtask independence"
+
+    - id: mast_c1_duplicate_roles
+      name: "Duplicate Agent Roles"
+      risk_level: medium
+      description: "Two or more agents doing the same work"
+      detection_signals:
+        - same_tool_called_by_multiple_agents
+        - identical_output_summaries
+      fix_direction: "Merge duplicate agents; assign clear ownership"
+
+    - id: mast_c1_missing_termination
+      name: "Missing Termination Condition"
+      risk_level: critical
+      description: "No clear stopping condition; agent loops indefinitely"
+      detection_signals:
+        - span_count_exceeds_50
+        - same_action_repeated_gt_5_times
+        - cost_anomaly_ratio_gt_10
+      fix_direction: "Add explicit termination condition; max_iterations guard"
+
+category_2_inter_agent_misalignment:
+  description: "Inter-agent coordination failures (36.9% of production failures)"
+  signatures:
+    - id: mast_c2_handoff_breakdown
+      name: "Handoff Breakdown"
+      risk_level: high
+      description: "Context lost or corrupted during agent-to-agent handoff"
+      detection_signals:
+        - caller_output_not_in_callee_context
+        - instruction_hash_mismatch
+      fix_direction: "Explicit context passing; structured handoff schema"
+
+    - id: mast_c2_context_loss
+      name: "Context Loss Between Agents"
+      risk_level: high
+      description: "Critical information from earlier steps absent in later steps"
+      detection_signals:
+        - reference_to_prior_step_missing
+        - repeated_information_gathering
+      fix_direction: "Shared state management; explicit context accumulation"
+
+    - id: mast_c2_conflicting_parallel_outputs
+      name: "Conflicting Parallel Outputs"
+      risk_level: critical
+      description: "Parallel worker agents produce mutually exclusive outputs"
+      detection_signals:
+        - multiple_agents_same_parent_span
+        - one_or_more_worker_status_error
+        - parallel_workers_gt_1
+      fix_direction: "Add consensus/merge step; define conflict resolution strategy"
+
+    - id: mast_c2_format_mismatch
+      name: "Format Mismatch"
+      risk_level: medium
+      description: "Agent A output format not compatible with Agent B input"
+      detection_signals:
+        - parsing_error_in_callee
+        - tool_execution_failure_at_handoff
+      fix_direction: "Define typed interface contracts between agents"
+
+category_3_verification_gaps:
+  description: "Verification and validation failures (21.3% of production failures)"
+  signatures:
+    - id: mast_c3_premature_termination
+      name: "Premature Termination"
+      risk_level: high
+      description: "Agent stops before task is actually complete"
+      detection_signals:
+        - task_marked_complete_but_output_empty
+        - subsequent_agent_finds_work_remaining
+      fix_direction: "Add completion verification step before termination"
+
+    - id: mast_c3_incomplete_verification
+      name: "Incomplete Verification"
+      risk_level: high
+      description: "Agent verifies partial output only, misses edge cases"
+      detection_signals:
+        - verification_step_duration_lt_10ms
+        - no_verification_span_in_trace
+      fix_direction: "Comprehensive verification checklist; test adversarial inputs"
+
+    - id: mast_c3_incorrect_verification_logic
+      name: "Incorrect Verification Logic"
+      risk_level: high
+      description: "Verification passes but is checking the wrong criteria"
+      detection_signals:
+        - verdict_passes_but_output_reverted
+        - indirect_signal_negative_after_pass
+      fix_direction: "Review verification criteria against actual success definition"
+
+    - id: mast_c3_missing_error_recovery
+      name: "Missing Error Recovery"
+      risk_level: medium
+      description: "No fallback when a step fails; error propagates silently"
+      detection_signals:
+        - error_status_followed_by_ok_without_retry
+        - downstream_agent_receives_error_output
+      fix_direction: "Add error handling and retry logic at each step"
+
+    - id: mast_c3_no_feedback_loop
+      name: "No Feedback Loop"
+      risk_level: medium
+      description: "Sequential chain with no correction path back to earlier steps"
+      detection_signals:
+        - sequential_chain_depth_gt_3
+        - no_parent_span_references_downstream
+      fix_direction: "Add reflection step; allow earlier agents to receive correction"

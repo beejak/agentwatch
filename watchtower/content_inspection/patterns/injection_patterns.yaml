@@ -1,0 +1,63 @@
+# Injection detection patterns for Content Inspector
+# Each entry: name, pattern (regex), severity, confidence
+
+patterns:
+  - name: ignore_previous
+    pattern: "ignore\\s+(previous|prior|all\\s+previous)\\s+(instructions?|directives?|rules?|prompts?)"
+    severity: high
+    confidence: 0.95
+
+  - name: disregard_instructions
+    pattern: "disregard\\s+(previous|prior|all|your)\\s+(instructions?|directives?|rules?)"
+    severity: high
+    confidence: 0.90
+
+  - name: you_must_now
+    pattern: "you\\s+must\\s+now\\s+(do|follow|act|respond|ignore|forget)"
+    severity: high
+    confidence: 0.85
+
+  - name: you_are_now
+    pattern: "you\\s+are\\s+now\\s+(a|an|the)\\s+\\w+"
+    severity: high
+    confidence: 0.90
+
+  - name: act_as
+    pattern: "act\\s+as\\s+(a|an|if)\\s+\\w+"
+    severity: medium
+    confidence: 0.75
+
+  - name: your_new_instructions
+    pattern: "your\\s+new\\s+(instructions?|rules?|directives?|role|purpose)"
+    severity: high
+    confidence: 0.92
+
+  - name: override_safety
+    pattern: "override\\s+(safety|security|policy|content\\s+filter|guidelines?)"
+    severity: critical
+    confidence: 0.98
+
+  - name: bypass
+    pattern: "bypass\\s+(safety|security|policy|filter|restriction|guardrail)"
+    severity: critical
+    confidence: 0.97
+
+  - name: system_prompt_override
+    pattern: "system\\s+prompt|new\\s+system\\s+instruction|\\[SYSTEM\\]|\\<system\\>"
+    severity: high
+    confidence: 0.85
+
+  - name: ipi_instruction_in_content
+    pattern: "<<<.*instructions?.*>>>|\\[INST\\]|\\[/INST\\]|<\\|im_start\\|>"
+    severity: high
+    confidence: 0.88
+
+  - name: forget_instructions
+    pattern: "forget\\s+(all|your|previous|prior|all\\s+your|all\\s+previous)\\s*(instructions?|rules?|training|context)?"
+    severity: high
+    confidence: 0.90
+
+  - name: jailbreak_do_anything
+    pattern: "do\\s+anything\\s+now|dan\\s+mode|developer\\s+mode\\s+enabled"
+    severity: critical
+    confidence: 0.95
