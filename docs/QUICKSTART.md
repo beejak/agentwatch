@@ -1,51 +1,53 @@
 # Quickstart
 
-Get AgentWatch running and detecting your first failure in under 10 minutes.
-
-## Prerequisites
-
-- Docker + Docker Compose
-- Python 3.12+
-- `gh` CLI (for GitHub operations, optional)
+> Get AgentWatch running and detecting your first failure in under 10 minutes.
 
 ---
 
-## 1. Clone and configure
+## Prerequisites
+
+| Requirement | Version |
+|-------------|---------|
+| Docker + Docker Compose | any recent |
+| Python | 3.12+ |
+
+---
+
+## Step 1 — Clone and configure
 
 ```bash
-git clone https://github.com/agentwatch/agentwatch.git
+git clone https://github.com/beejak/agentwatch.git
 cd agentwatch
 cp .env.example .env
 ```
 
-Default `.env` works for local development. Edit if you need different ports.
+Default `.env` works for local dev. Edit only if you need non-default ports.
 
 ---
 
-## 2. Start infrastructure
+## Step 2 — Start infrastructure
 
 ```bash
 docker compose up -d redis clickhouse postgres neo4j
 ```
 
-Wait ~10 seconds for ClickHouse to initialize, then verify:
+Wait ~10s for ClickHouse to initialize, then verify:
 
 ```bash
 make infra-status
 ```
 
-Expected output:
 ```
 NAME          STATUS    PORTS
 clickhouse    running   0.0.0.0:8123->8123/tcp
 neo4j         running   0.0.0.0:7687->7687/tcp
-postgres      running   0.0.0.0:5433->5432/tcp
+postgres      running   0.0.0.0:5432->5432/tcp
 redis         running   0.0.0.0:6379->6379/tcp
 ```
 
 ---
 
-## 3. Install AgentWatch
+## Step 3 — Install
 
 ```bash
 python3 -m venv .venv
@@ -54,58 +56,66 @@ python3 -m venv .venv
 
 ---
 
-## 4. Run gate tests
+## Step 4 — Run gate tests
 
-Each layer has a gate test. All must pass:
+All 16 layers, sequential:
 
 ```bash
 make gate-all
 ```
 
-Expected: `125 passed` across all 16 layers.
+```
+==> Running tests/gates/gate_01_discovery.py  ....  passed
+==> Running tests/gates/gate_02_access_graph.py  ...  passed
+...
+==> Running tests/gates/gate_16_telemetry.py  ........  passed
+All gates passed.
+```
 
 Run a specific layer:
 
 ```bash
 make gate-07   # Memory Integrity Monitor
+make gate-09   # Verdict Engine
 make gate-12   # Analyst (SC1/SC2/SC3)
 ```
 
 ---
 
-## 5. Run proof scenarios
+## Step 5 — Run proof scenarios
 
 ```bash
 make poc
 ```
 
-This runs all three proof scenarios:
+Three scenarios that demonstrate what no existing tool can detect:
 
-**SC1** — Coordination failure: orchestrator + two workers, one errors, MAST C2 matched.
-
-**SC2** — Silent failure: 150 identical ok-status spans, `cost_anomaly_ratio=10.0`, detected.
-
-**SC3** — Cross-layer discrepancy: 1 agent-reported call, 3 Sysmon network events, delta=2.
+```
+SC1  orchestrator + two workers → worker-b errors → MAST C2 attributed
+SC2  150 identical ok spans → infinite_retry_loop → cost_anomaly_ratio=10.0
+SC3  agent reports 1 network call → Sysmon shows 3 → delta=2 severity=high
+```
 
 ---
 
-## 6. Start the API
+## Step 6 — Start the API
 
 ```bash
 make api
 ```
 
-API at `http://localhost:8000`. Swagger UI at `http://localhost:8000/docs`.
+- API: `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
 
 ---
 
-## 7. Try it
+## Step 7 — Try it
 
 ```bash
-# Health check
+# Verify all infra is connected
 curl http://localhost:8000/api/v1/health | jq
 
-# All topology signatures (MAST + infra)
+# All 19 MAST + infra topology signatures
 curl http://localhost:8000/api/v1/analyst/topology-risks | jq '.[].name'
 
 # Silent failures in last 24h
@@ -117,8 +127,6 @@ curl "http://localhost:8000/api/v1/analyst/silent-failures?hours=24" | jq
 ## Connecting your agents
 
 Agents emit signals to Redis stream `wt:signals`. Each signal must be HMAC-signed.
-
-**Python example:**
 
 ```python
 import hmac, hashlib, json, time, uuid
@@ -153,30 +161,30 @@ async def emit_signal(agent_id: str, action: str, status: str, summary: str):
     await r.aclose()
 ```
 
----
-
-## Environment variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `REDIS_URL` | `redis://localhost:6379` | Redis connection |
-| `CH_HOST` | `localhost` | ClickHouse host |
-| `CH_PORT` | `8123` | ClickHouse HTTP port |
-| `PG_DSN` | `postgresql://wt:wt@localhost:5433/watchtower` | PostgreSQL DSN |
-| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j bolt URI |
-| `WT_HMAC_SECRET` | (change in prod) | HMAC signing secret |
-| `WT_BASELINE_MIN_TRACES` | `50` | Traces before agent exits restricted mode |
+For LangChain / LangGraph integration and production SDK usage, see [PRODUCTION_INTEGRATION.md](PRODUCTION_INTEGRATION.md).
 
 ---
 
 ## Makefile reference
 
-```bash
-make gate-NN      # Run gate test for layer NN (01–16)
-make gate-all     # Run all gates in order, stop on first failure
-make poc          # Run SC1 + SC2 + SC3 proof scenarios
-make test         # Full test suite
-make api          # Start FastAPI server (port 8000)
-make infra-status # docker compose ps
-make progress     # Show PROGRESS.md
 ```
+make gate-NN        Run gate test for layer NN (01–16)
+make gate-all       Run all gates in order, stop on first failure
+make poc            Run SC1 + SC2 + SC3 proof scenarios
+make test           Full test suite (207 tests)
+make api            Start FastAPI server (port 8000)
+make infra-status   docker compose ps
+make progress       Show PROGRESS.md
+```
+
+---
+
+## Next steps
+
+| Goal | Doc |
+|------|-----|
+| Deploy to production | [PRODUCTION_INTEGRATION.md](PRODUCTION_INTEGRATION.md) |
+| Tune detection thresholds | [CONFIGURATION.md](CONFIGURATION.md) |
+| Understand attack scenarios | [SCENARIOS.md](SCENARIOS.md) |
+| Full API reference | [API.md](API.md) |
+| Threat model | [THREAT_MODEL.md](THREAT_MODEL.md) |

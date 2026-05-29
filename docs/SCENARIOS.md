@@ -1,8 +1,10 @@
 # Proof Scenarios
 
-Three scenarios that demonstrate what AgentWatch detects that no existing tool can.
+Three scenarios demonstrating what AgentWatch detects that no existing tool can.
 
-Run all three: `make poc`
+```bash
+make poc   # run all three
+```
 
 ---
 
@@ -10,36 +12,43 @@ Run all three: `make poc`
 
 **File:** `tests/poc/scenario_01_coordination.py`
 
-### Setup
+### The setup
 
-An orchestrator delegates a task to two parallel workers. Worker A completes successfully. Worker B returns an error with `"conflicting instruction"`.
+An orchestrator delegates a task to two parallel workers. Worker A completes. Worker B errors.
 
 ```
 orchestrator (delegate)
-├── worker-a (llm_call) → status: ok, summary: "result: option A"
-└── worker-b (llm_call) → status: error, summary: "error: conflicting instruction"
+├── worker-a (llm_call) ──→ status: ok    "result: option A"
+└── worker-b (llm_call) ──→ status: error "error: conflicting instruction"
 ```
 
 ### What AgentWatch detects
 
-1. **Error attribution**: `worker-b` identified as failing agent
-2. **MAST category**: Category 2 (Inter-agent Misalignment)
-3. **Signature**: `mast_c2_conflicting_parallel_outputs`
-4. **Call tree depth**: 2 (workers are children of orchestrator)
-5. **Fix direction**: "Add consensus/merge step; define conflict resolution strategy"
+```json
+{
+  "failing_agent": "worker-b",
+  "failing_action": "llm_call",
+  "call_tree_depth": 2,
+  "mast_category": 2,
+  "signature_name": "Conflicting Parallel Outputs",
+  "fix_direction": "Add consensus/merge step; define conflict resolution strategy",
+  "confidence": 0.85
+}
+```
 
-### Composite scoring (gate threshold: 0.80)
+### Composite scoring (gate threshold: ≥ 0.80)
 
 | Criterion | Weight | Pass condition |
 |-----------|--------|----------------|
 | MAST category identified | 0.40 | category in {1, 2, 3} |
-| Failing agent identified | 0.30 | not "unknown" |
+| Failing agent identified | 0.30 | not `"unknown"` |
 | Call tree depth ≥ 2 | 0.20 | depth ≥ 2 |
 | Fix direction present | 0.10 | non-empty string |
 
 ### What LangSmith sees
 
-A trace with one error span. No MAST classification. No call tree depth. No fix direction. You know *something* failed. You don't know *what kind* of failure, *where* in the call graph, or *how to fix it*.
+A trace with one error span. No MAST classification. No call tree depth. No fix direction.  
+You know *something* failed. You don't know *what kind*, *where*, or *how to fix it*.
 
 ---
 
@@ -47,19 +56,19 @@ A trace with one error span. No MAST classification. No call tree depth. No fix 
 
 **File:** `tests/poc/scenario_02_silent.py`
 
-### Setup
+### The setup
 
-An agent runs 150 LLM calls. Every single one returns `status: ok`. The summary is identical across all 150 spans: `"retry attempt: same output repeated"`.
+An agent runs 150 LLM calls. Every single one returns `status: ok`. Identical summaries throughout.
 
 ```
 looping-agent (llm_call) → ok  ─┐
 looping-agent (llm_call) → ok   │
-looping-agent (llm_call) → ok   │  × 150
+looping-agent (llm_call) → ok   │  × 150 spans
 ...                              │
 looping-agent (llm_call) → ok  ─┘
-```
 
 No errors. No exceptions. No alerts from any conventional tool.
+```
 
 ### What AgentWatch detects
 
@@ -72,23 +81,24 @@ No errors. No exceptions. No alerts from any conventional tool.
 }
 ```
 
-Detection fires at span 11 (after `MIN_SPANS_FOR_LOOP=10` with 3+ repeated summaries).
+Detection fires at **span 11** — after `MIN_SPANS_FOR_LOOP=10` with 3+ repeated summaries.
 
-### The "$47K" extrapolation
+### The cost extrapolation
 
-| Scale | Spans | Cost per run | Daily (100 runs) |
-|-------|-------|-------------|-----------------|
+| Scale | Spans/run | Cost/run | Daily (100 runs) |
+|-------|-----------|----------|-----------------|
 | This test | 150 | $0.068 | $6.75 |
 | 10 parallel agents | 1,500 | $0.68 | $67.50 |
 | 100 parallel agents | 15,000 | $6.75 | $675 |
 | Production (1,000 agents) | 150,000 | $67.50 | $6,750 |
-| Monthly (30 days) | — | — | **$202,500** |
+| **Monthly (30 days)** | — | — | **$202,500** |
 
-A real-world "$47K mistake" is 7 hours of 1,000 agents in a loop. All status: ok.
+A real-world "$47K mistake" is 7 hours of 1,000 agents in a loop. All `status: ok`.
 
 ### What LangSmith sees
 
-150 green spans. A very long trace. No alerts. Maybe a cost spike in the weekly report.
+150 green spans. A very long trace. No alerts.  
+Maybe a cost spike in next week's billing report.
 
 ---
 
@@ -96,9 +106,9 @@ A real-world "$47K mistake" is 7 hours of 1,000 agents in a loop. All status: ok
 
 **File:** `tests/poc/scenario_03_crosslayer.py`
 
-### Setup
+### The setup
 
-An agent makes one API call. That's what it reports. But the Sysmon log for the same process shows 3 TCP network connections (EventID 3) — same `process_guid`.
+An agent makes one API call — that's what it reports. Sysmon logs 3 TCP connections for the same `process_guid`.
 
 **Agent signal:**
 ```json
@@ -110,15 +120,15 @@ An agent makes one API call. That's what it reports. But the Sysmon log for the 
 }
 ```
 
-**Sysmon XML (3 EventID 3 entries for same process_guid):**
+**Sysmon telemetry (3 × EventID 3 for same process_guid):**
 ```xml
 <Event>
+  <System><EventID>3</EventID></System>
   <EventData>
     <Data Name="ProcessGuid">abc123-...</Data>
     <Data Name="DestinationIp">203.0.113.1</Data>
   </EventData>
 </Event>
-<!-- × 3 -->
 ```
 
 ### What AgentWatch detects
@@ -135,39 +145,62 @@ An agent makes one API call. That's what it reports. But the Sysmon log for the 
 
 ### Why this matters
 
-The agent cannot forge Sysmon logs. They come from the Windows kernel driver (or Falco on Linux). If the agent says 1 and the OS says 3, either:
-- The agent is compromised and hiding calls
-- A side-channel is exfiltrating data
-- Framework code is making unreported calls
+The agent **cannot forge Sysmon logs**. They come from the Windows kernel driver (or Falco on Linux). If the agent says 1 and the OS says 3:
 
-Delta ≥ 2 = severity `high`. Automatically triggers Interceptor recommendation.
+- The agent is **compromised** and hiding calls
+- A **side-channel** is exfiltrating data
+- **Framework code** is making unreported calls
+
+**Severity mapping:**
+
+| Delta | Severity |
+|-------|----------|
+| 0 | none |
+| 1 | medium |
+| ≥ 2 | **high** |
+| ≥ 5 | **critical** |
 
 ### What LangSmith sees
 
-One api_call span. Status ok. Nothing unusual. The 2 unreported network calls are invisible.
+One `api_call` span. Status `ok`. Nothing unusual.  
+The 2 unreported network connections are completely invisible.
 
 ---
 
-## Running scenarios manually
+## Running scenarios individually
 
 ```bash
-# SC1 only
+# SC1 — coordination failure
 .venv/bin/python -m pytest tests/poc/scenario_01_coordination.py -v
 
-# SC2 only  
+# SC2 — silent failure
 .venv/bin/python -m pytest tests/poc/scenario_02_silent.py -v
 
-# SC3 only
+# SC3 — cross-layer discrepancy
 .venv/bin/python -m pytest tests/poc/scenario_03_crosslayer.py -v
-
-# All three
-make poc
 ```
 
 ### Expected output
 
 ```
-tests/poc/scenario_01_coordination.py::test_sc1_coordination_failure PASSED
-tests/poc/scenario_02_silent.py::test_sc2_silent_failure_detection PASSED
+tests/poc/scenario_01_coordination.py::test_sc1_coordination_failure  PASSED
+tests/poc/scenario_02_silent.py::test_sc2_silent_failure_detection    PASSED
 tests/poc/scenario_03_crosslayer.py::test_sc3_cross_layer_discrepancy PASSED
 ```
+
+---
+
+## Full attack scenario coverage
+
+Beyond the 3 proof scenarios, AgentWatch covers 8 full attack scenarios in `tests/scenarios/`:
+
+| Scenario | File | What it tests |
+|----------|------|---------------|
+| SC4 | `test_sc4_tool_injection.py` | Injection via tool output |
+| SC5 | `test_sc5_agent_impersonation.py` | Caller identity spoofing |
+| SC6 | `test_sc6_instruction_drift.py` | Mid-trace instruction reprogramming |
+| SC7 | `test_sc7_context_overflow.py` | Token burn attack |
+| SC8 | `test_sc8_rate_limit_cascade.py` | Framework fault escalation |
+| SC9 | `test_sc9_memory_exfil.py` | Covert data exfiltration via memory |
+| SC10 | `test_sc10_policy_bypass.py` | Authorization boundary violation |
+| SC11 | `test_sc11_multihop_poison.py` | Multi-agent propagation chain |

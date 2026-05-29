@@ -1,17 +1,19 @@
-# AgentWatch — Success and Failure Criteria
+# Success and Failure Criteria
 
-*Security detection systems are judged differently from general software.
-A missed detection is not a bug — it is a security incident.*
+> Security detection systems are judged differently from general software.  
+> A missed detection is not a bug — **it is a security incident.**
 
 ---
 
-## The Three Non-Negotiables
+## The three non-negotiables
 
-1. **Zero missed critical attacks** — the must-detect suite must be 100%
-2. **Zero false positives on the test corpus** — operators stop trusting noisy systems
-3. **No broken layers** — every gate must pass before any merge
+```
+✦  Zero missed critical attacks     — must-detect suite: 100%
+✦  Zero false positives on corpus   — operators stop trusting noisy systems
+✦  No broken layers                 — every gate passes before any merge
+```
 
-Violating any of these = the repo is in a failed state, regardless of everything else.
+**Violating any of these = repo is in a failed state, regardless of everything else.**
 
 ---
 
@@ -141,23 +143,25 @@ Run it before every release. Save the report to `docs/TESTING_GAPS.md`.
 ## Repo-Level Definitions
 
 ### Repo PASS (ready to ship)
+
 ```
-Tier 1: 12/12 must-detect tests pass
-Tier 2: 14/14 false-positive tests pass
-Tier 3: 76/76 scenario/integration tests pass
-         125/125 gate tests pass
-Tier 4: Agentic tester detection rate ≥ 90%, FP rate ≤ 5%
-TOTAL:  207/207 static tests + agentic tester green
+✓  Tier 1:   12/12  must-detect tests
+✓  Tier 2:   14/14  false-positive tests
+✓  Tier 3:   76/76  scenario/integration tests
+            125/125  gate tests
+✓  Tier 4:   DR ≥ 90%  FP ≤ 5%  no CRITICAL gaps
+─────────────────────────────────────────────────
+   TOTAL:  207/207 static + agentic tester green
 ```
 
 ### Repo FAIL (not shippable)
+
 ```
-ANY of:
-  - 1+ Tier 1 failure    → CRITICAL SECURITY GAP — stop everything
-  - 1+ Tier 2 failure    → PRODUCTION UNREADY — high urgency fix
-  - 1+ gate failure      → BROKEN LAYER — fix before merge
-  - Agentic DR < 80%     → SIGNIFICANT DETECTION REGRESSION
-  - Agentic FP > 10%     → NOISE LEVEL UNACCEPTABLE
+✗  1+ Tier 1 failure    → CRITICAL SECURITY GAP    stop everything
+✗  1+ Tier 2 failure    → PRODUCTION UNREADY        high urgency
+✗  1+ gate failure      → BROKEN LAYER              fix before merge
+✗  Agentic DR < 80%     → SIGNIFICANT REGRESSION    address before release
+✗  Agentic FP > 10%     → NOISE UNACCEPTABLE        tune patterns
 ```
 
 ---

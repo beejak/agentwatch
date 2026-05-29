@@ -1,12 +1,14 @@
 # Configuration
 
-## Environment variables
-
-Copy `.env.example` to `.env` and edit as needed.
+Copy `.env.example` to `.env` and edit as needed:
 
 ```bash
 cp .env.example .env
 ```
+
+---
+
+## Environment variables
 
 ### Infrastructure
 
@@ -18,7 +20,7 @@ cp .env.example .env
 | `CH_DB` | `watchtower` | ClickHouse database name |
 | `CH_USER` | `wt` | ClickHouse username |
 | `CH_PASS` | `wt` | ClickHouse password |
-| `PG_DSN` | `postgresql://wt:wt@localhost:5433/watchtower` | PostgreSQL DSN |
+| `PG_DSN` | `postgresql://wt:wt@localhost:5432/watchtower` | PostgreSQL DSN |
 | `NEO4J_URI` | `bolt://localhost:7687` | Neo4j bolt URI |
 | `NEO4J_USER` | `neo4j` | Neo4j username |
 | `NEO4J_PASS` | `watchtower` | Neo4j password |
@@ -33,6 +35,14 @@ cp .env.example .env
 | `WT_HMAC_SECRET` | `watchtower-hmac-secret-change-in-prod` | HMAC secret — **change in production** |
 | `WT_BASELINE_MIN_TRACES` | `50` | Traces before agent exits restricted mode |
 
+### Anthropic (LLM Judge — optional)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | — | Required only for Verdict Engine Stage 3 (LLM Judge) |
+
+> Without `ANTHROPIC_API_KEY`, the Verdict Engine still works — it exits at Stage 1 (deterministic) or Stage 2 (baseline) for most traces. Stage 3 is sampled at only 20%.
+
 ### Langfuse (optional)
 
 | Variable | Default | Description |
@@ -41,86 +51,99 @@ cp .env.example .env
 | `LANGFUSE_SECRET_KEY` | `sk-lf-local` | Langfuse project secret key |
 | `LANGFUSE_HOST` | `http://localhost:3010` | Langfuse self-hosted URL |
 
-### Anthropic (LLM Judge — optional)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | — | Required only for LLM Judge in Verdict Engine |
-
-Without `ANTHROPIC_API_KEY`, the Verdict Engine still works — it exits at Stage 1 (deterministic) or Stage 2 (baseline) for most traces. Stage 3 (LLM Judge) is only sampled at 20%.
-
 ---
 
 ## Docker Compose ports
 
-| Service | Host port | Container port |
-|---------|-----------|----------------|
-| Redis | 6379 | 6379 |
-| ClickHouse | 8123 (HTTP), 9000 (native) | 8123, 9000 |
-| PostgreSQL | 5433 | 5432 |
-| Neo4j | 7687 (bolt), 7474 (browser) | 7687, 7474 |
-| Langfuse | 3010 | 3000 |
-
-PostgreSQL uses host port **5433** (not 5432) to avoid conflicts with local Postgres installations.
+| Service | Host port | Notes |
+|---------|-----------|-------|
+| Redis | `6379` | — |
+| ClickHouse | `8123` (HTTP) · `9000` (native) | — |
+| PostgreSQL | `5432` | — |
+| Neo4j | `7687` (bolt) · `7474` (browser) | — |
+| Langfuse | `3010` | Maps to container port 3000 |
 
 ---
 
 ## Detection thresholds
 
-These constants are in source and can be tuned for your environment:
+All thresholds are tunable constants in source. Change them to match your agent's cost profile and traffic patterns.
 
-### Silent failure (`watchtower/analyst/silent.py`)
-
-```python
-EXPECTED_COST_PER_SPAN = 0.000045   # $0.000045/span (~150 tokens @ $0.000003/token)
-RETRY_REPEAT_THRESHOLD = 3          # min repeated summaries before flagging
-MIN_SPANS_FOR_LOOP = 10             # min spans before loop detection activates
-```
-
-Token pricing varies by model. Calibrate `EXPECTED_COST_PER_SPAN` to your actual cost per LLM call.
-
-### Behavioral baseline (`watchtower/baseline/engine.py`)
+### Silent failure — `watchtower/analyst/silent.py`
 
 ```python
-SIGMA_THRESHOLD = 3.0               # Standard deviations for anomaly detection
-BASELINE_MIN_TRACES = 50            # From WT_BASELINE_MIN_TRACES env var
+EXPECTED_COST_PER_SPAN = 0.000045   # ~150 tokens at $0.000003/token
+RETRY_REPEAT_THRESHOLD = 3          # repeated identical summaries before flagging
+MIN_SPANS_FOR_LOOP = 10             # minimum spans before loop detection activates
 ```
 
-Reduce `SIGMA_THRESHOLD` to 2.0 for tighter detection (more false positives). Increase to 4.0 for noisier environments.
+> Calibrate `EXPECTED_COST_PER_SPAN` to your actual per-call cost. Claude Sonnet at default usage = ~$0.000045. GPT-4o = higher. Haiku = lower.
 
-### Verdict engine (`watchtower/verdict/engine.py`)
+### Behavioral baseline — `watchtower/baseline/engine.py`
 
 ```python
-llm_sample_rate = 0.2               # 20% of traces reach LLM Judge
+SIGMA_THRESHOLD = 3.0               # standard deviations for anomaly detection
+BASELINE_MIN_TRACES = 50            # from WT_BASELINE_MIN_TRACES env var
 ```
 
-Increase for more coverage at higher API cost. Set to `0.0` to disable LLM Judge entirely.
+- Reduce to `2.0` for tighter detection (more FPs in noisy environments)
+- Increase to `4.0` for high-variance agents
 
-### Content inspection (`watchtower/content_inspection/inspector.py`)
+### Verdict engine — `watchtower/verdict/engine.py`
 
-12 patterns are compiled at startup from `patterns/injection_patterns.yaml`. Add patterns there without code changes.
+```python
+llm_sample_rate = 0.2               # 20% of traces reach LLM Judge (Stage 3)
+```
+
+- Increase to `1.0` for maximum coverage (higher API cost)
+- Set to `0.0` to disable LLM Judge entirely
+
+### Verdict deterministic thresholds — `watchtower/verdict/sources/deterministic.py`
+
+```python
+COST_THRESHOLD = 0.10    # $0.10 per trace triggers deterministic verdict
+MAX_SPANS = 50           # spans before flagging as excessive
+```
+
+### Content inspection
+
+15 patterns compiled at startup from `watchtower/content_inspection/patterns/injection_patterns.yaml`. Add or modify patterns there — no code changes needed.
 
 ---
 
 ## Chronicle retention
 
-ClickHouse TTL is set to 90 days in `schema.sql`:
+ClickHouse TTL is set to 90 days:
 
 ```sql
 TTL toDate(timestamp) + INTERVAL 90 DAY
 ```
 
-To change retention, modify the TTL in `schema.sql` and recreate the tables. **Note**: existing data is unaffected (TTL only applies to new partitions during merges).
+To change: modify the TTL in `watchtower/chronicle/schema.sql` and recreate tables. Existing data is unaffected — TTL only applies during ClickHouse merge operations.
 
 ---
 
 ## Production checklist
 
-- [ ] Change `WT_HMAC_SECRET` to a random 32+ byte secret
-- [ ] Change all database passwords from defaults
-- [ ] Set `ANTHROPIC_API_KEY` if you want LLM Judge
-- [ ] Configure `WT_BASELINE_MIN_TRACES` based on your agent traffic volume
-- [ ] Tune `EXPECTED_COST_PER_SPAN` to your actual per-call cost
-- [ ] Set up Sysmon (Windows) or Falco (Linux) on agent hosts for SC3 detection
-- [ ] Point `WT_SIGNAL_QUEUE` to a production Redis with persistence enabled
-- [ ] Configure ClickHouse with replication if running multi-node
+```
+[ ] Change WT_HMAC_SECRET to a random 32+ byte secret
+    openssl rand -hex 32
+
+[ ] Change all database passwords from defaults
+
+[ ] Set ANTHROPIC_API_KEY if you want LLM Judge (Stage 3)
+
+[ ] Tune EXPECTED_COST_PER_SPAN to your actual per-call cost
+
+[ ] Tune WT_BASELINE_MIN_TRACES to your agent traffic volume
+    (higher traffic = lower value needed to establish baseline faster)
+
+[ ] Set up Sysmon (Windows) or Falco (Linux) on agent hosts for SC3
+
+[ ] Point WT_SIGNAL_QUEUE to a production Redis with AOF persistence
+
+[ ] Configure ClickHouse with replication if running multi-node
+
+[ ] Set WT_ENFORCEMENT_MODE (shadow → soft → enforce)
+    See PRODUCTION_INTEGRATION.md Phase 8
+```
