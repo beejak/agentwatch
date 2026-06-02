@@ -13,6 +13,16 @@
   "autoMemory": true,
   "autoMemoryDirectory": ".claude/memory",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "type": "command",
