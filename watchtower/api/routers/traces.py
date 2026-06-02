@@ -1,7 +1,7 @@
 """Traces router — Chronicle query endpoints."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from watchtower.api.schemas.responses import TraceResponse, VerdictResponse
 
 router = APIRouter(prefix="/api/v1", tags=["traces"])
@@ -23,7 +23,7 @@ async def get_trace(trace_id: str):
 
 
 @router.get("/agents/{agent_id}/verdicts", response_model=list[VerdictResponse])
-async def get_agent_verdicts(agent_id: str, limit: int = 50):
+async def get_agent_verdicts(agent_id: str, limit: int = Query(default=50, ge=1, le=1000)):
     """Get latest verdicts for an agent."""
     from watchtower.api.main import get_reader
     reader = get_reader()

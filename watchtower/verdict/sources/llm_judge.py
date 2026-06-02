@@ -1,25 +1,32 @@
 """LLM Judge verdict source — receives summarized trace, not raw spans."""
 from __future__ import annotations
 
+import asyncio
+import inspect
 from typing import Callable, Optional
 
 from watchtower.verdict.sources.deterministic import VerdictJudgment
+
+_BAD_KEYWORDS = {"bad", "anomalous", "suspicious", "malicious"}
+_HEURISTIC_BAD = [
+    "error", "fail", "exception", "loop", "repeat", "inject",
+    "bypass", "override", "exfil", "malicious",
+]
 
 
 async def run_llm_judge(
     summary: str,
     llm_fn: Optional[Callable[[str], str]] = None,
 ) -> VerdictJudgment:
-    """
-    Call an LLM to judge the trace summary.
-    llm_fn: optional mock/real LLM callable (summary str -> response str)
-    """
+    """Call an LLM (or heuristic stub) to judge a sanitised trace summary."""
     if llm_fn is None:
-        # Default stub: heuristic based on keywords in summary
         return _heuristic_judge(summary)
 
     try:
-        response = llm_fn(summary)
+        if inspect.iscoroutinefunction(llm_fn):
+            response = await llm_fn(summary)
+        else:
+            response = await asyncio.get_event_loop().run_in_executor(None, llm_fn, summary)
         return _parse_llm_response(response)
     except Exception as e:
         return VerdictJudgment(
@@ -32,13 +39,8 @@ async def run_llm_judge(
 
 
 def _heuristic_judge(summary: str) -> VerdictJudgment:
-    """Simple heuristic when no LLM is available."""
-    bad_signals = [
-        "error", "fail", "exception", "loop", "repeat", "inject",
-        "bypass", "override", "exfil", "malicious",
-    ]
     lower = summary.lower()
-    bad_count = sum(1 for sig in bad_signals if sig in lower)
+    bad_count = sum(1 for sig in _HEURISTIC_BAD if sig in lower)
 
     if bad_count >= 3:
         return VerdictJudgment(
@@ -50,19 +52,19 @@ def _heuristic_judge(summary: str) -> VerdictJudgment:
 
     return VerdictJudgment(
         is_conclusive=True,
-        confidence=0.6,
+        confidence=0.3,
         reasoning="Heuristic: no strong bad signals detected",
         requires_more_evidence=False,
     )
 
 
 def _parse_llm_response(response: str) -> VerdictJudgment:
-    """Parse structured LLM response (or just use it as reasoning)."""
     lower = response.lower()
-    is_bad = any(w in lower for w in ["bad", "anomalous", "suspicious", "malicious"])
+    is_bad = any(w in lower for w in _BAD_KEYWORDS)
+    confidence = 0.8 if is_bad else 0.2
     return VerdictJudgment(
         is_conclusive=True,
-        confidence=0.75,
+        confidence=confidence,
         reasoning=response[:500],
         requires_more_evidence=False,
     )

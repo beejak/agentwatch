@@ -19,7 +19,7 @@
 *Catch what LangSmith can't. Stop attacks before they propagate.*
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-207%20passing-22c55e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-263%20passing-22c55e?style=flat-square)](#testing)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square)](LICENSE)
 [![arXiv](https://img.shields.io/badge/arXiv-2503.13657-b31b1b?style=flat-square)](https://arxiv.org/abs/2503.13657)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -262,7 +262,17 @@ These are enforced in code and verified in every gate run:
 ✦  Interceptor logs EVERY ACTION to Chronicle. Never silent.
 ✦  New agent runs in RESTRICTED MODE until 50 traces establish baseline.
 ✦  LLM Judge receives SUMMARIZED TRACE — never raw spans.
+✦  Signal fields have enforced size limits (summary ≤ 8 KiB, agent_id ≤ 256 chars).
+✦  MIM content capped at 64 KiB before regex matching (ReDoS prevention).
+✦  Quarantine endpoint requires X-WatchTower-Key when WATCHTOWER_API_KEY is set.
+✦  All DB credentials sourced from environment variables — no hardcoded defaults in prod.
 ```
+
+**Production deployment checklist:**
+- Set `WT_HMAC_SECRET` to a cryptographically random value (≥32 bytes)
+- Set `WATCHTOWER_API_KEY` to protect the quarantine endpoint
+- Set `CH_PASS`, `PG_DSN`, `NEO4J_PASS` from secret store (not defaults)
+- Set `CORS_ORIGINS` to explicit allowed origins
 
 ---
 
@@ -271,12 +281,12 @@ These are enforced in code and verified in every gate run:
 ```
 Tier 1 — Must-detect      12 tests · zero tolerance · any miss = CRITICAL security gap
 Tier 2 — False positives  14 tests · FP rate must be 0% on corpus
-Tier 3 — Scenario/gates  207 tests · 8 attack scenarios · 16 gate layers
+Tier 3 — Scenario/gates  263 tests · 8 attack scenarios · 16 gate layers
 Tier 4 — Agentic tester   Claude-generated novel payloads · target DR ≥ 90%
 ```
 
 ```bash
-# Run all 207 static tests
+# Run all 263 static tests
 make test
 
 # Run gate suite (stops on first failure)

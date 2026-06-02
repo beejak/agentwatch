@@ -42,10 +42,13 @@ class MemoryIntegrityMonitor:
         # all events
         self._events: list[MemoryEvent] = []
 
+    MAX_CONTENT_LEN = 65_536  # 64 KB — prevents ReDoS on regex patterns
+
     def _hash(self, content: str) -> str:
         return hashlib.sha256(content.encode()).hexdigest()
 
     async def on_write(self, agent_id: str, content: str, session_id: str) -> MemoryEvent:
+        content = content[: self.MAX_CONTENT_LEN]
         content_hash = self._hash(content)
         preview = content[:200]
         flagged = False

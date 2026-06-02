@@ -138,31 +138,38 @@ class ChronicleWriter:
         for et, payload in batch:
             by_type.setdefault(et, []).append(payload)
 
+        failed: list[tuple[str, dict]] = []
         for et, payloads in by_type.items():
             table = self.TABLE_MAP.get(et)
             if not table:
                 logger.warning("Unknown event type: %s", et)
                 continue
-            await self._write_rows(table, et, payloads)
+            try:
+                await self._write_rows(table, et, payloads)
+            except Exception as e:
+                logger.error("Chronicle write error for %s: %s", table, e)
+                failed.extend((et, p) for p in payloads)
+
+        if failed:
+            self._batch.extend(failed)
+        else:
+            self._batch.clear()
 
     async def _write_rows(self, table: str, event_type: str, payloads: list[dict]) -> None:
-        """Write rows to ClickHouse table."""
-        try:
-            if event_type == "agent_spans":
-                rows = [self._signal_to_row(p) for p in payloads]
-                cols = [
-                    "trace_id", "span_id", "parent_span_id", "agent_id", "action",
-                    "status", "timestamp", "duration_ms", "tokens_in", "tokens_out",
-                    "model", "cost", "instruction_hash", "caller_agent_id", "process_guid",
-                    "retrieval_flag", "memory_op", "framework_fault", "policy_checked", "summary"
-                ]
-            else:
-                rows = [self._generic_to_row(p) for p in payloads]
-                cols = self._generic_cols(event_type)
+        """Write rows to ClickHouse table. Raises on failure so caller can preserve batch."""
+        if event_type == "agent_spans":
+            rows = [self._signal_to_row(p) for p in payloads]
+            cols = [
+                "trace_id", "span_id", "parent_span_id", "agent_id", "action",
+                "status", "timestamp", "duration_ms", "tokens_in", "tokens_out",
+                "model", "cost", "instruction_hash", "caller_agent_id", "process_guid",
+                "retrieval_flag", "memory_op", "framework_fault", "policy_checked", "summary"
+            ]
+        else:
+            rows = [self._generic_to_row(p, event_type) for p in payloads]
+            cols = self._generic_cols(event_type)
 
-            self._client.insert(table, rows, column_names=cols)
-        except Exception as e:
-            logger.error("Chronicle write error for %s: %s", table, e)
+        self._client.insert(table, rows, column_names=cols)
 
     def _signal_to_row(self, p: dict) -> list:
         ts = p["timestamp"]
@@ -191,30 +198,33 @@ class ChronicleWriter:
             p.get("summary", ""),
         ]
 
-    def _generic_to_row(self, p: dict) -> list:
-        ts = p.get("timestamp", time.time())
-        if isinstance(ts, float):
-            ts = _ts_to_dt(ts)
-        return [
-            p.get("trace_id", ""),
-            p.get("agent_id", ""),
-            ts,
-            json.dumps(p.get("details", p)),
-        ]
+    _EXTRA_COLS: dict[str, list[str]] = {
+        "host_telemetry":   ["event_type", "process_guid"],
+        "memory_events":    ["operation", "content_hash", "flagged", "pattern", "severity", "session_id"],
+        "content_results":  ["content_hash", "flagged", "confidence", "pattern_matched", "severity", "action"],
+        "policy_decisions": ["action", "permitted", "reason"],
+        "verdicts":         ["verdict", "confidence", "sources", "reason"],
+        "interceptor_acts": ["action", "reason"],
+        "discovery_events": ["flagged", "namespace"],
+    }
 
     def _generic_cols(self, event_type: str) -> list[str]:
         base = ["trace_id", "agent_id", "timestamp", "details"]
-        extras = {
-            "host_telemetry": ["event_type", "process_guid"],
-            "memory_events": ["operation", "content_hash", "flagged", "pattern", "severity", "session_id"],
-            "content_results": ["content_hash", "flagged", "confidence", "pattern_matched", "severity", "action"],
-            "policy_decisions": ["action", "permitted", "reason"],
-            "verdicts": ["verdict", "confidence", "sources", "reason"],
-            "interceptor_acts": ["action", "reason"],
-            "discovery_events": ["flagged", "namespace"],
-        }
-        # For generic writes, just use the basic columns
-        return base
+        return base + self._EXTRA_COLS.get(event_type, [])
+
+    def _generic_to_row(self, p: dict, event_type: str = "") -> list:
+        ts = p.get("timestamp", time.time())
+        if isinstance(ts, float):
+            ts = _ts_to_dt(ts)
+        row = [
+            p.get("trace_id", ""),
+            p.get("agent_id", ""),
+            ts,
+            json.dumps(p.get("details", {})),
+        ]
+        for col in self._EXTRA_COLS.get(event_type, []):
+            row.append(p.get(col))
+        return row
 
     async def _auto_flush_loop(self) -> None:
         while self._running:

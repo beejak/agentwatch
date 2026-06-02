@@ -83,7 +83,7 @@ class VerdictEngine:
         summary = summarise_trace(spans)
         self._last_llm_summary = summary
         llm = await run_llm_judge(summary, self._llm_fn)
-        score = 1.0 if llm.confidence < 0.5 else 0.5
+        score = 0.0 if llm.confidence > 0.5 else 1.0
 
         verdict = Verdict(
             trace_id=trace_id,
