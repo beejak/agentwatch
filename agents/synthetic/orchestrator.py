@@ -23,15 +23,12 @@ HMAC_SECRET = os.getenv("WT_HMAC_SECRET", "watchtower-hmac-secret-change-in-prod
 FAIL_MODE   = os.getenv("FAIL_MODE", "NONE")
 
 
-def _sign(payload: dict, secret: str) -> str:
-    data = json.dumps(payload, sort_keys=True)
-    return hmac.new(secret.encode(), data.encode(), hashlib.sha256).hexdigest()
-
-
 async def emit(redis_client, signal_dict: dict) -> None:
-    sig_hmac = _sign(signal_dict, HMAC_SECRET)
-    signal_dict["_hmac"] = sig_hmac
-    await redis_client.rpush("wt:signals", json.dumps(signal_dict))
+    from watchtower.core.signal import Signal
+    signal = Signal(**signal_dict)
+    signal_json = json.dumps(signal.model_dump(), sort_keys=True, default=str)
+    sig_hmac = hmac.new(HMAC_SECRET.encode(), signal_json.encode(), hashlib.sha256).hexdigest()
+    await redis_client.xadd("wt:signals", {"signal": signal_json, "hmac": sig_hmac})
 
 
 async def run_orchestrator():

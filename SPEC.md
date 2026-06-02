@@ -35,11 +35,11 @@ langfuse        | HTTP            | http://localhost:3000
 | #  | Layer                    | Files                                              | Gate                  | Status |
 |----|--------------------------|----------------------------------------------------|-----------------------|--------|
 | 01 | Core                     | core/signal.py,core/trace.py,core/events.py        | gate_01_core          | DONE   |
-| 02 | Discovery                | discovery/scanner.py,discovery/registry.py         | gate_02_discovery     | TODO   |
+| 02 | Discovery                | discovery/scanner.py,discovery/registry.py         | gate_02_discovery     | DONE   |
 | 03 | Access Graph             | access_graph/graph.py,access_graph/manifest.py     | gate_03_access        | TODO   |
 | 04 | Policy Engine            | policy_engine/engine.py,policy_engine/temporal.py  | gate_04_policy        | TODO   |
 | 05 | Content Inspection       | content_inspection/inspector.py,patterns/          | gate_05_content       | TODO   |
-| 06 | Receiver                 | receiver/receiver.py,receiver/verification.py      | gate_06_receiver      | TODO   |
+| 06 | Receiver                 | receiver/receiver.py,receiver/verification.py      | gate_06_receiver      | DONE   |
 | 07 | Memory Integrity Monitor | memory_monitor/monitor.py,memory_monitor/detectors/| gate_07_mim           | TODO   |
 | 08 | Chronicle                | chronicle/writer.py,chronicle/schema.sql           | gate_08_chronicle     | TODO   |
 | 09 | Verdict Engine           | verdict/engine.py,verdict/sources/,verdict/summariser.py | gate_09_verdict | TODO   |
@@ -54,3 +54,5 @@ langfuse        | HTTP            | http://localhost:3000
 §B BUGS
 | # | Layer | Symptom | Fix | Status |
 |---|-------|---------|-----|--------|
+| 1 | 06 Receiver | orchestrator.rpush (LIST) vs receiver.xread (STREAM) — pipeline dead | orchestrator.emit uses xadd | FIXED |
+| 2 | 06 Receiver | HMAC field `_hmac` in payload, receiver reads `hmac` — always empty | emit uses `{"signal":..,"hmac":..}` xadd fields; signing uses Signal.model_dump() both sides | FIXED |
