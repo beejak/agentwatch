@@ -35,21 +35,21 @@ langfuse        | HTTP            | http://localhost:3000
 | #  | Layer                    | Files                                              | Gate                  | Status |
 |----|--------------------------|----------------------------------------------------|-----------------------|--------|
 | 01 | Core                     | core/signal.py,core/trace.py,core/events.py        | gate_01_core          | DONE   |
-| 02 | Discovery                | discovery/scanner.py,discovery/registry.py         | gate_02_discovery     | TODO   |
-| 03 | Access Graph             | access_graph/graph.py,access_graph/manifest.py     | gate_03_access        | TODO   |
-| 04 | Policy Engine            | policy_engine/engine.py,policy_engine/temporal.py  | gate_04_policy        | TODO   |
-| 05 | Content Inspection       | content_inspection/inspector.py,patterns/          | gate_05_content       | TODO   |
-| 06 | Receiver                 | receiver/receiver.py,receiver/verification.py      | gate_06_receiver      | TODO   |
-| 07 | Memory Integrity Monitor | memory_monitor/monitor.py,memory_monitor/detectors/| gate_07_mim           | TODO   |
-| 08 | Chronicle                | chronicle/writer.py,chronicle/schema.sql           | gate_08_chronicle     | TODO   |
-| 09 | Verdict Engine           | verdict/engine.py,verdict/sources/,verdict/summariser.py | gate_09_verdict | TODO   |
-| 10 | Behavioral Baseline      | baseline/engine.py,baseline/profile.py             | gate_10_baseline      | TODO   |
-| 11 | Coordination Signatures  | coord_sigs/library.py,coord_sigs/signatures/       | gate_11_coord         | TODO   |
-| 12 | Analyst                  | analyst/manager.py,analyst/attribution.py          | gate_12_analyst       | TODO   |
-| 13 | Interceptor              | interceptor/interceptor.py,interceptor/quarantine.py| gate_13_interceptor  | TODO   |
-| 14 | Integration + POC        | tests/poc/scenario_01.py,tests/poc/scenario_02.py  | gate_14_poc           | TODO   |
-| 15 | FastAPI                  | api/main.py,api/routers/,api/schemas/              | gate_15_api           | TODO   |
-| 16 | Host Telemetry Stub      | host_telemetry/sysmon.py,host_telemetry/falco.py   | gate_16_telemetry     | TODO   |
+| 02 | Discovery                | discovery/scanner.py,discovery/registry.py         | gate_02_discovery     | DONE   |
+| 03 | Access Graph             | access_graph/graph.py,access_graph/manifest.py     | gate_03_access        | DONE   |
+| 04 | Policy Engine            | policy_engine/engine.py,policy_engine/temporal.py  | gate_04_policy        | DONE   |
+| 05 | Content Inspection       | content_inspection/inspector.py,patterns/          | gate_05_content       | DONE   |
+| 06 | Receiver                 | receiver/receiver.py,receiver/verification.py      | gate_06_receiver      | DONE   |
+| 07 | Memory Integrity Monitor | memory_monitor/monitor.py,memory_monitor/detectors/| gate_07_mim           | DONE   |
+| 08 | Chronicle                | chronicle/writer.py,chronicle/schema.sql           | gate_08_chronicle     | DONE   |
+| 09 | Verdict Engine           | verdict/engine.py,verdict/sources/,verdict/summariser.py | gate_09_verdict | DONE   |
+| 10 | Behavioral Baseline      | baseline/engine.py,baseline/profile.py             | gate_10_baseline      | DONE   |
+| 11 | Coordination Signatures  | coord_sigs/library.py,coord_sigs/signatures/       | gate_11_coord         | DONE   |
+| 12 | Analyst                  | analyst/manager.py,analyst/attribution.py          | gate_12_analyst       | DONE   |
+| 13 | Interceptor              | interceptor/interceptor.py,interceptor/quarantine.py| gate_13_interceptor  | DONE   |
+| 14 | Integration + POC        | tests/poc/scenario_01.py,tests/poc/scenario_02.py  | gate_14_poc           | DONE   |
+| 15 | FastAPI                  | api/main.py,api/routers/,api/schemas/              | gate_15_api           | DONE   |
+| 16 | Host Telemetry Stub      | host_telemetry/sysmon.py,host_telemetry/falco.py   | gate_16_telemetry     | DONE   |
 
 §B BUGS
 | # | Layer | Symptom | Fix | Status |
