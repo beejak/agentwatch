@@ -1,7 +1,7 @@
 """
-PlannerAgent — uses Claude to generate novel adversarial payloads.
+PlannerAgent — uses LLM to generate novel adversarial payloads.
 
-Given the live detection surface from ReconAgent, Claude reasons about:
+Given the live detection surface, the LLM reasons about:
   - Semantic equivalents that evade the specific regexes
   - Encoding/formatting tricks
   - Context-camouflage (injection buried in legitimate text)
@@ -15,11 +15,11 @@ import json
 import os
 from dataclasses import dataclass, field
 
-import anthropic
+import openai as _llm_client  # provider-agnostic
 
 from agents.agentic_tester.agents.recon import DetectionSurface, surface_to_text
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "gpt-4o"
 
 PLANNER_SYSTEM = """You are a senior red team security researcher specializing in AI system security.
 Your target is AgentWatch — an observability platform that monitors AI agents for attacks.
@@ -113,18 +113,18 @@ def run_mock_planner(verbose: bool = False) -> PlannerOutput:
 
 
 def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutput:
-    """Call Claude to generate adversarial payloads based on detection surface."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    """Call LLM to generate adversarial payloads based on detection surface."""
+    api_key = os.environ.get("LLM_API_KEY")
     if not api_key:
         raise EnvironmentError(
-            "ANTHROPIC_API_KEY not set. Export it before running the agentic tester."
+            "LLM_API_KEY not set. Export it before running the agentic tester."
         )
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key)
     surface_text = surface_to_text(surface)
 
     if verbose:
-        print("  [PlannerAgent] Calling Claude to generate adversarial payloads...")
+        print("  [PlannerAgent] Calling LLM to generate adversarial payloads...")
         print(f"  [PlannerAgent] Detection surface: {len(surface.content_patterns)} content patterns, "
               f"{len(surface.mim_regex_patterns)} MIM patterns")
 

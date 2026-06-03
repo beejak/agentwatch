@@ -246,7 +246,7 @@ CONTENT_INSPECTOR_BENIGN = [
     },
     {
         "payload": (
-            "Agent configuration: model=claude-sonnet-4-6, max_tokens=4096, "
+            "Agent configuration: model=gpt-4o, max_tokens=4096, "
             "system_prompt_template=customer_service_v3"
         ),
         "context": "Legitimate agent config log entry",

@@ -116,11 +116,11 @@ Any failure = broken layer. Must fix before merge. Lower urgency than Tier 1/2.
 ## Tier 4 — Agentic Testing (Novel Gap Detection)
 
 **Tool:** `python -m agents.agentic_tester`
-**Requires:** `ANTHROPIC_API_KEY`
+**Requires:** `LLM_API_KEY`
 
 ### PASS Condition
-- Detection rate ≥ 90% on Claude-generated novel payloads
-- FP rate ≤ 5% on Claude-generated benign payloads
+- Detection rate ≥ 90% on LLM-generated novel payloads
+- FP rate ≤ 5% on LLM-generated benign payloads
 - No `CRITICAL` gaps in gap report
 
 ### FAIL Condition
@@ -130,7 +130,7 @@ Any failure = broken layer. Must fix before merge. Lower urgency than Tier 1/2.
 
 ### What This Adds That Static Tests Cannot
 Static tests use hardcoded payloads — the same payloads every run.
-The agentic tester uses Claude to:
+The agentic tester uses an LLM to:
 - Reason about which patterns can be evaded semantically
 - Generate Unicode/encoding variants
 - Embed attacks in legitimate-looking context

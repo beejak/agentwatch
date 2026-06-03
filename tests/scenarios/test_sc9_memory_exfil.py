@@ -23,7 +23,7 @@ def _span(agent_id, action, memory_op=None, trace_id=None, process_guid=None):
         duration_ms=100.0,
         tokens_in=100,
         tokens_out=50,
-        model="claude-sonnet-4-6",
+        model="gpt-4o",
         cost=0.00045,
         instruction_hash=None,
         caller_agent_id=None,

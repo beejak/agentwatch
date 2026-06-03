@@ -75,7 +75,7 @@ agents/adapters/
 ├── superpowers.py  ← YAML policy evaluator (deterministic, 0.011ms)
 ├── graphify.py     ← AST call-context enrichment (>90% cache hit target)
 ├── ruflo.py        ← BFT consensus swarm (async, off hot-path)
-├── claude_mem.py   ← persistent agent memory client (writer provenance)
+├── agent_mem.py   ← persistent agent memory client (writer provenance)
 └── caveman.py      ← UTC token compression (hot-path lean)
 
 policies/
@@ -246,7 +246,7 @@ agents/
     ├── superpowers.py  YAML policy evaluator
     ├── graphify.py     AST enrichment bridge (graphify-ts / tree-sitter)
     ├── ruflo.py        Async BFT consensus swarm
-    ├── claude_mem.py   Persistent memory client (cavemem MCP)
+    ├── agent_mem.py   Persistent memory client (cavemem MCP)
     └── caveman.py      UTC token compression
 
 firewall/

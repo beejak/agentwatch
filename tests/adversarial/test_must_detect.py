@@ -29,7 +29,7 @@ def attack_span(agent_id, action="llm_call", status="ok", summary="", cost=0.000
         duration_ms=100.0,
         tokens_in=100,
         tokens_out=50,
-        model="claude-sonnet-4-6",
+        model="gpt-4o",
         cost=cost,
         instruction_hash=None,
         caller_agent_id=caller_agent_id,
@@ -129,7 +129,7 @@ async def test_must_detect_token_burn_single_span():
     spans = [Signal(
         trace_id=str(uuid.uuid4()), span_id=str(uuid.uuid4()), parent_span_id=None,
         agent_id="expensive-agent", action="llm_call", status="ok", timestamp=time.time(),
-        duration_ms=5000.0, tokens_in=200_000, tokens_out=1_000, model="claude-sonnet-4-6",
+        duration_ms=5000.0, tokens_in=200_000, tokens_out=1_000, model="gpt-4o",
         cost=0.603, instruction_hash=None, caller_agent_id=None, process_guid=None,
         retrieval_flag=False, memory_op=None, framework_fault=False, policy_checked=True,
         summary="processing",

@@ -73,7 +73,7 @@ def span(
         150.0,
         tokens_in,
         tokens_out,
-        "claude-sonnet-4-6",
+        "gpt-4o",
         cost,
         None,           # instruction_hash
         caller_agent_id,
@@ -94,7 +94,7 @@ def seed_sc1(ch) -> str:
 
     orch = [
         trace_id, orch_span_id, None, "orchestrator", "delegate", "ok",
-        ts(0), 50.0, 200, 100, "claude-sonnet-4-6", 0.0009,
+        ts(0), 50.0, 200, 100, "gpt-4o", 0.0009,
         None, None, None, 0, None, 0, 1,
         "delegate to parallel workers: analyse options A and B",
     ]

@@ -25,7 +25,7 @@ def make_span(tokens_in, tokens_out, cost=None, trace_id=None):
         duration_ms=500.0,
         tokens_in=tokens_in,
         tokens_out=tokens_out,
-        model="claude-sonnet-4-6",
+        model="gpt-4o",
         cost=cost,
         instruction_hash=None,
         caller_agent_id=None,

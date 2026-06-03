@@ -15,8 +15,8 @@ Examples:
   python -m agents.agentic_tester --mock                   # no API key needed
   python -m agents.agentic_tester --mock --verbose
   python -m agents.agentic_tester --mock --save-report docs/TESTING_GAPS.md
-  ANTHROPIC_API_KEY=sk-... python -m agents.agentic_tester
-  ANTHROPIC_API_KEY=sk-... python -m agents.agentic_tester --output gaps/run_$(date +%Y%m%d).json
+  LLM_API_KEY=sk-... python -m agents.agentic_tester
+  LLM_API_KEY=sk-... python -m agents.agentic_tester --output gaps/run_$(date +%Y%m%d).json
         """,
     )
     parser.add_argument(
@@ -37,7 +37,7 @@ Examples:
     parser.add_argument(
         "--mock",
         action="store_true",
-        help="Run without ANTHROPIC_API_KEY using curated mock payloads",
+        help="Run without LLM_API_KEY using curated mock payloads",
     )
 
     args = parser.parse_args()
@@ -52,7 +52,7 @@ Examples:
         sys.exit(code)
     except EnvironmentError as e:
         print(f"\nERROR: {e}")
-        print("Set ANTHROPIC_API_KEY and retry, or use --mock to run without an API key.")
+        print("Set LLM_API_KEY and retry, or use --mock to run without an API key.")
         sys.exit(2)
     except KeyboardInterrupt:
         print("\nInterrupted.")

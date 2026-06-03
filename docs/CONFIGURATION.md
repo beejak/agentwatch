@@ -35,13 +35,13 @@ cp .env.example .env
 | `WT_HMAC_SECRET` | `watchtower-hmac-secret-change-in-prod` | HMAC secret — **change in production** |
 | `WT_BASELINE_MIN_TRACES` | `50` | Traces before agent exits restricted mode |
 
-### Anthropic (LLM Judge — optional)
+### LLM Judge (optional)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | — | Required only for Verdict Engine Stage 3 (LLM Judge) |
+| `LLM_API_KEY` | — | Required only for Verdict Engine Stage 3 (LLM Judge) |
 
-> Without `ANTHROPIC_API_KEY`, the Verdict Engine still works — it exits at Stage 1 (deterministic) or Stage 2 (baseline) for most traces. Stage 3 is sampled at only 20%.
+> Without `LLM_API_KEY`, the Verdict Engine still works — it exits at Stage 1 (deterministic) or Stage 2 (baseline) for most traces. Stage 3 is sampled at only 20%.
 
 ### Langfuse (optional)
 
@@ -77,7 +77,7 @@ RETRY_REPEAT_THRESHOLD = 3          # repeated identical summaries before flaggi
 MIN_SPANS_FOR_LOOP = 10             # minimum spans before loop detection activates
 ```
 
-> Calibrate `EXPECTED_COST_PER_SPAN` to your actual per-call cost. Claude Sonnet at default usage = ~$0.000045. GPT-4o = higher. Haiku = lower.
+> Calibrate `EXPECTED_COST_PER_SPAN` to your actual per-call cost. LLM model at default usage = ~$0.000045. GPT-4o = higher. Haiku = lower.
 
 ### Behavioral baseline — `watchtower/baseline/engine.py`
 
@@ -131,7 +131,7 @@ To change: modify the TTL in `watchtower/chronicle/schema.sql` and recreate tabl
 
 [ ] Change all database passwords from defaults
 
-[ ] Set ANTHROPIC_API_KEY if you want LLM Judge (Stage 3)
+[ ] Set LLM_API_KEY if you want LLM Judge (Stage 3)
 
 [ ] Tune EXPECTED_COST_PER_SPAN to your actual per-call cost
 

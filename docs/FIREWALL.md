@@ -164,7 +164,7 @@ Returns `(ast_path: str | None, cache_hit: bool)`.
 
 ---
 
-### `claude_mem.py` — Persistent Memory Client
+### `agent_mem.py` — Persistent Memory Client
 
 Thin client over the cavemem MCP server. Tracks writer provenance for every memory entry.
 

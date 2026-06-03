@@ -5,9 +5,9 @@ Multi-agent system that autonomously probes AgentWatch for detection gaps.
 
 Flow:
   ReconAgent    → reads live source, maps detection surface
-  PlannerAgent  → Claude generates novel adversarial payloads
+  PlannerAgent  → LLM generates novel adversarial payloads
   ExecutorAgent → runs payloads through actual production code
-  AnalystAgent  → Claude synthesizes gaps, proposes fixes, rates severity
+  AnalystAgent  → LLM synthesizes gaps, proposes fixes, rates severity
 
 Usage:
   python -m agents.agentic_tester
@@ -199,7 +199,7 @@ async def run(
 ) -> int:
     """Full orchestration flow. Returns exit code (0=pass, 1=gaps found, 2=error)."""
 
-    mode_label = "MOCK MODE — no API calls" if mock else "LIVE MODE — Claude-powered"
+    mode_label = "MOCK MODE — no API calls" if mock else "LIVE MODE — LLM-powered"
     print("AgentWatch Agentic Tester")
     print("=" * 60)
     print(f"  {mode_label}")
@@ -218,7 +218,7 @@ async def run(
         print("\n  Phase 2/4: PlannerAgent — loading curated mock payload set...")
         planner_out = run_mock_planner(verbose=verbose)
     else:
-        print("\n  Phase 2/4: PlannerAgent — generating adversarial payloads with Claude...")
+        print("\n  Phase 2/4: PlannerAgent — generating adversarial payloads with LLM...")
         planner_out = run_planner(surface, verbose=verbose)
 
     if planner_out.error:
@@ -247,7 +247,7 @@ async def run(
         print("\n  Phase 4/4: AnalystAgent — rule-based gap analysis (mock mode)...")
         gap_report = run_mock_analyst(exec_report, verbose=verbose)
     else:
-        print("\n  Phase 4/4: AnalystAgent — synthesizing gaps with Claude...")
+        print("\n  Phase 4/4: AnalystAgent — synthesizing gaps with LLM...")
         gap_report = run_analyst(exec_report, verbose=verbose)
 
     if gap_report.error:

@@ -119,7 +119,7 @@ export NEO4J_USER=neo4j
 export NEO4J_PASSWORD=<secret>
 
 # Optional: LLM Judge (verdict engine stage 3)
-export ANTHROPIC_API_KEY=<your key>
+export LLM_API_KEY=<your key>
 
 # Optional: Observability for AgentWatch itself
 export LANGFUSE_PUBLIC_KEY=<key>
@@ -176,7 +176,7 @@ def emit_span(
     cost: float,
     summary: str,
     trace_id: str,
-    model: str = "claude-sonnet-4-6",
+    model: str = "gpt-4o",
     **kwargs,
 ) -> None:
     signal = Signal(
@@ -466,7 +466,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run agentic tester
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         run: |
           python -m agents.agentic_tester \
             --save-report docs/TESTING_GAPS.md \

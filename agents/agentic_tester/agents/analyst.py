@@ -1,7 +1,7 @@
 """
-GapAnalystAgent — uses Claude to synthesize findings from execution results.
+GapAnalystAgent — uses LLM to synthesize findings from execution results.
 
-Given what was missed and what false-positived, Claude:
+Given what was missed and what false-positived, the LLM:
 1. Identifies patterns in the evasions
 2. Explains WHY each miss occurred (which regex gap)
 3. Proposes specific pattern fixes
@@ -14,11 +14,11 @@ import json
 import os
 from dataclasses import dataclass, field
 
-import anthropic
+import openai as _llm_client  # provider-agnostic
 
 from agents.agentic_tester.agents.executor import ExecutionReport
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "gpt-4o"
 
 ANALYST_SYSTEM = """You are a security engineering lead reviewing red team findings against an AI monitoring system.
 
@@ -204,7 +204,7 @@ def run_mock_analyst(exec_report: ExecutionReport, verbose: bool = False) -> Gap
 
     actions = [
         {"priority": 1, "action": f"Fix {len(gaps)} missed attack pattern(s)", "effort": "medium"},
-        {"priority": 2, "action": "Run with ANTHROPIC_API_KEY for LLM-driven gap synthesis", "effort": "low"},
+        {"priority": 2, "action": "Run with LLM_API_KEY for LLM-driven gap synthesis", "effort": "low"},
         {"priority": 3, "action": "Add multilingual / homoglyph attack variants to mock_payloads.py", "effort": "medium"},
     ]
     if fp_issues:
@@ -216,7 +216,7 @@ def run_mock_analyst(exec_report: ExecutionReport, verbose: bool = False) -> Gap
         f"Mock-mode analysis: {s['attacks_detected']}/{s['attacks_tested']} attacks detected "
         f"({dr:.0%} DR), {s['false_positives']} FPs ({fpr:.0%} FPR). "
         f"{len(gaps)} gap group(s) identified. "
-        "Re-run with ANTHROPIC_API_KEY for LLM-driven root cause and regex proposals."
+        "Re-run with LLM_API_KEY for LLM-driven root cause and regex proposals."
     )
 
     return GapReport(
@@ -233,17 +233,17 @@ def run_mock_analyst(exec_report: ExecutionReport, verbose: bool = False) -> Gap
 
 
 def run_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapReport:
-    """Call Claude to analyze execution results and produce gap report."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    """Call LLM to analyze execution results and produce gap report."""
+    api_key = os.environ.get("LLM_API_KEY")
     if not api_key:
-        raise EnvironmentError("ANTHROPIC_API_KEY not set.")
+        raise EnvironmentError("LLM_API_KEY not set.")
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key)
     s = exec_report.summary()
 
     if verbose:
         print(f"  [AnalystAgent] Analyzing {s['attacks_missed']} misses and "
-              f"{s['false_positives']} FPs with Claude...")
+              f"{s['false_positives']} FPs with LLM...")
 
     user_msg = ANALYST_USER_TMPL.format(
         attacks_tested=s["attacks_tested"],
