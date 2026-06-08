@@ -276,6 +276,9 @@ def run_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapRepor
             raw = raw[4:]
         raw = raw.rsplit("```", 1)[0].strip()
 
+    import re as _re
+    raw = _re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw)
+
     try:
         data = json.loads(raw)
         return GapReport(

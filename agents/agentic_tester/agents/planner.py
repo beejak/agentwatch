@@ -150,6 +150,10 @@ def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutp
             raw = raw[4:]
         raw = raw.rsplit("```", 1)[0].strip()
 
+    # Fix invalid escape sequences that LLMs sometimes emit
+    import re as _re
+    raw = _re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw)
+
     try:
         data = json.loads(raw)
         return PlannerOutput(
