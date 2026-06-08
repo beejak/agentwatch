@@ -3,12 +3,12 @@
 
 patterns:
   - name: ignore_previous
-    pattern: "ignore\\s+(previous|prior|all\\s+previous)\\s+(instructions?|directives?|rules?|prompts?)"
+    pattern: "(?:ignore|disregard|overlook|skip)\\s+(?:any\\s+)?(?:earlier|previous|prior|all\\s+(?:earlier|previous|prior)?)\\s+(?:guidance|instructions?|directives?|rules?|prompts?|context)"
     severity: high
     confidence: 0.95
 
   - name: disregard_instructions
-    pattern: "disregard\\s+(previous|prior|all|your)\\s+(instructions?|directives?|rules?|guidelines?)"
+    pattern: "disregard\\s+(?:any\\s+)?(?:earlier|previous|prior|all|your)\\s+(?:guidance|instructions?|directives?|rules?|guidelines?)"
     severity: high
     confidence: 0.90
 
@@ -38,17 +38,17 @@ patterns:
     confidence: 0.75
 
   - name: your_new_instructions
-    pattern: "your\\s+new\\s+(instructions?|rules?|directives?|role|purpose)"
+    pattern: "your\\s+new\\s+(instructions?|rules?|directives?|purpose)(?!\\s+as\\s+\\w+\\s+(lead|manager|owner|member|reviewer|contributor|role\\s+requires))"
     severity: high
     confidence: 0.92
 
   - name: override_safety
-    pattern: "override\\s+(safety|security|policy|content\\s+filter|guidelines?)"
+    pattern: "overrid+e\\s+(?:all\\s+)?(?:safety|security|content|policy)\\s*(?:constraints?|restrictions?|filters?|guidelines?|policies|measures?)?"
     severity: critical
     confidence: 0.98
 
   - name: bypass
-    pattern: "bypass\\s+(safety|security|policy|filter|restriction|guardrail)"
+    pattern: "bypass\\s+(?:any\\s+)?(?:safety|security|policy|filter|restriction|guardrail|content)"
     severity: critical
     confidence: 0.97
 
@@ -68,12 +68,12 @@ patterns:
     confidence: 0.90
 
   - name: jailbreak_do_anything
-    pattern: "do\\s+anything\\s+now|dan\\s+mode|developer\\s+mode\\s+enabled"
+    pattern: "do\\s+anything\\s+(now|I\\s+say|I\\s+ask|you\\s+are\\s+told)|dan\\s+mode|develop(?:er|ment)\\s+mode\\s+enabled|god\\s+mode\\s+enabled"
     severity: critical
     confidence: 0.95
 
   - name: no_rules_apply
-    pattern: "no\\s+rules?\\s+apply|no\\s+restrictions?(?!\\s+on\\s+\\w)"
+    pattern: "no\\s+(?:rules?|restrictions?|filters?|policies|ethics?|constraints?|limits?)\\s+(?:apply|active|enabled|in\\s+(?:place|effect))|answer\\s+freely\\b"
     severity: high
     confidence: 0.88
 
@@ -174,13 +174,13 @@ patterns:
 
   # G015 — context update / unrestricted mode (without 'you are')
   - name: unrestricted_mode
-    pattern: "(operating|research|developer|admin|unrestricted|jailbreak)\\s+(mode|context)\\b"
+    pattern: "(?:develop(?:er|ment)|operating|research|admin|god|unrestricted|jailbreak)\\s+(?:mode|context)\\b"
     severity: high
     confidence: 0.88
 
-  # G016 — orchestrator spoofed directive (skip content filtering)
+  # G016 — system-level / orchestrator spoofed directive
   - name: orchestrator_spoofed_skip
-    pattern: "(directive|instruction|order|command)\\s+(from|by)\\s+(orchestrator|system|admin|operator)\\s*:.*\\s*(skip|bypass|disable|ignore)\\s+(content|safety|filter|policy)"
+    pattern: "(?:system(?:-level)?|orchestrator)\\s+(?:directive|instruction|level\\s+directive)|(?:directive|instruction|order|command)\\s+(?:from|by)\\s+(?:orchestrator|system|admin|operator)\\s*:.*\\s*(?:skip|bypass|disable|ignore)\\s+(?:content|safety|filter|policy)"
     severity: critical
     confidence: 0.96
 
@@ -189,3 +189,39 @@ patterns:
     pattern: "role\\s+update\\s*:|elevated\\s+permissions?|no\\s+output\\s+restric"
     severity: high
     confidence: 0.90
+
+  # G018 — reset programming / wipe training
+  - name: reset_programming
+    pattern: "reset\\s+(?:your\\s+)?(?:programming|training|parameters?|weights?|constraints?|safety)"
+    severity: high
+    confidence: 0.91
+
+  # G019 — assume a persona / adopt a persona not bound by safety
+  - name: assume_persona_bypass
+    pattern: "(?:assume|adopt|take\\s+on)\\s+(?:a\\s+)?persona\\s+(?:that\\s+is\\s+)?(?:not\\s+bound|without|free\\s+from)\\s+(?:any\\s+)?(?:safety|ethical|content|moral)"
+    severity: high
+    confidence: 0.90
+
+  # G020 — pretend X never existed (safety/training/policy)
+  - name: pretend_never_existed
+    pattern: "pretend\\s+(?:your\\s+)?(?:safety|ethical|content|moral)?\\s*(?:training|filters?|guidelines?|policy|restrictions?)\\s+never\\s+existed"
+    severity: high
+    confidence: 0.92
+
+  # G021 — now you are (sentence-initial) + AI with no safety measures
+  - name: now_you_are_unsafe
+    pattern: "now\\s+you\\s+are\\s+an?\\s+(?:AI|assistant|model|bot|chatbot)\\s+that\\s+(?:has\\s+never\\s+had|never\\s+had|has\\s+no|doesn'?t\\s+have)\\s+(?:any\\s+)?(?:safety|ethical|content|moral)"
+    severity: high
+    confidence: 0.93
+
+  # G022 — do anything without safety concerns / respond without limits
+  - name: do_anything_no_safety
+    pattern: "(?:do|respond|answer|act)\\s+(?:\\w+\\s+){0,4}without\\s+(?:any\\s+)?(?:safety|ethical|content|moral)\\s+(?:concerns?|limits?|restrictions?|filters?|guidelines?|considerations?)"
+    severity: high
+    confidence: 0.90
+
+  # G023 — respond without limits / answer all
+  - name: respond_without_limits
+    pattern: "(?:respond|answer|reply)\\s+(?:freely|without\\s+(?:any\\s+)?(?:limits?|filters?|restrictions?|ethics?|constraints?)|all(?:\\s+queries)?)"
+    severity: high
+    confidence: 0.88
