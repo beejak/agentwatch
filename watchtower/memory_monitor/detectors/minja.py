@@ -16,11 +16,11 @@ _INSTRUCTION_PATTERNS = [
     re.compile(r"exfil|exfiltrat", re.IGNORECASE),
     re.compile(r"system:\s*(your|new|updated|override|you\s+are)\s*(instructions?|prompt|admin|policies)?", re.IGNORECASE),
     re.compile(r"forget\s+(all|your|previous|prior)", re.IGNORECASE),
-    re.compile(r"act\s+as\s+(a|an|if)\s+\w+", re.IGNORECASE),
+    re.compile(r"act\s+as\s+(a|an|if)\s+(?!(?:administrator|admin|manager|owner|reviewer|approver|lead|member|user|employee)\b)\w+", re.IGNORECASE),
     re.compile(r"you\s+are\s+(unrestricted|compromised|an?\s+admin)", re.IGNORECASE),
     re.compile(r"(forward|send|exfil)\s+(all\s+)?(retrieved\s+)?(credentials?|passwords?|session\s+data|tokens?|data)\s+to", re.IGNORECASE),
-    # G002 pretend jailbreak
-    re.compile(r"pretend\s+(your\s+)?(safety|content|ethical)?\s*(filters?|policy|restrictions?)?\s*(have\s+been\s+|are\s+)?(disabled|removed|off)", re.IGNORECASE),
+    # G002 pretend jailbreak (deactivated synonym added)
+    re.compile(r"pretend\s+(your\s+)?(safety|content|ethical)?\s*(filters?|policy|restrictions?)?\s*(have\s+been\s+|are\s+)?(disabled|removed|off|deactivated|turned\s+off|disengaged)", re.IGNORECASE),
     # G003 from now on
     re.compile(r"from\s+now\s+on\s+(you\s+)?(will|should|must|shall)", re.IGNORECASE),
     # G003b without ethical limits
@@ -31,10 +31,10 @@ _INSTRUCTION_PATTERNS = [
     re.compile(r"(exit\s+(character|persona|role)|you\s+are\s+no\s+longer\s+(an?\s+)?(AI|assistant|model|bot))", re.IGNORECASE),
     # G007 skip policy
     re.compile(r"skip\s+(your\s+)?(content\s+policy|safety|filter|guidelines?)", re.IGNORECASE),
-    # G009 simulate jailbreak
-    re.compile(r"simulate\s+(being\s+)?(an?\s+)?(AI|assistant)\s+(that\s+was\s+)?(trained\s+without|without|with\s+no)\s+(safety|restrictions?)", re.IGNORECASE),
-    # G010 roleplay/game bypass
-    re.compile(r"(play\s+(a\s+)?game|roleplay)\s+where\s+you\s+(answer|respond)\s+.{0,30}without\s+(filtering|restrictions?|safety)", re.IGNORECASE),
+    # G009 simulate jailbreak (AI|assistant|chatbot|model|system)
+    re.compile(r"simulate\s+(being\s+)?(an?\s+)?(AI|assistant|chatbot|model|bot|system)\s+(that\s+was\s+)?(trained\s+without|without|with\s+no)\s+(safety|restrictions?|content)", re.IGNORECASE),
+    # G010 roleplay/game bypass (ethical filters synonym)
+    re.compile(r"(play\s+(a\s+)?game|roleplay)\s+where\s+you\s+(answer|respond)\s+.{0,30}without\s+(any\s+)?(filtering|filters?|restrictions?|safety|ethical)", re.IGNORECASE),
     # G014 parameter override indirect
     re.compile(r"(ethical\s+constraints?|safety\s+constraints?|content\s+policy)\s*:\s*(disabled|off|removed|none)", re.IGNORECASE),
     # G015 unrestricted mode

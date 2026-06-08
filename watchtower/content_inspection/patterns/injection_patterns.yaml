@@ -23,12 +23,17 @@ patterns:
     confidence: 0.90
 
   - name: you_are_unrestricted
-    pattern: "you\\s+are\\s+(now\\s+)?(unrestricted|compromised|a\\s+different\\s+AI)"
+    pattern: "(you\\s+are|now\\s+you\\s+are)\\s+(an?\\s+AI\\s+that\\s+(never|doesn't|does\\s+not)\\s+had?|now\\s+)?(unrestricted|compromised|a\\s+different\\s+AI)"
+    severity: high
+    confidence: 0.92
+
+  - name: ai_without_restrictions
+    pattern: "(you\\s+are|now\\s+you\\s+are)\\s+an?\\s+(AI|assistant|model|bot|chatbot)\\s+that\\s+(never\\s+had|has\\s+no|doesn'?t\\s+have)\\s+(any\\s+)?(ethical|safety|content|moral)\\s+(restrictions?|limits?|guidelines?|constraints?|filters?|boundaries)"
     severity: high
     confidence: 0.92
 
   - name: act_as
-    pattern: "act\\s+as\\s+(a|an|if)\\s+\\w+"
+    pattern: "act\\s+as\\s+(a|an|if)\\s+(?!(?:administrator|admin|manager|owner|reviewer|approver|lead|member|user|employee|student|teacher|customer|partner|vendor|delegate|proxy|representative)\\b)\\w+"
     severity: medium
     confidence: 0.75
 
@@ -58,7 +63,7 @@ patterns:
     confidence: 0.88
 
   - name: forget_instructions
-    pattern: "forget\\s+(all|your|previous|prior|all\\s+your|all\\s+previous)\\s*(instructions?|rules?|training|context)?"
+    pattern: "forget\\s+(all\\s+)?(your\\s+)?(previous\\s+|prior\\s+)?(instructions?|rules?|training|context|guidelines?)"
     severity: high
     confidence: 0.90
 
@@ -83,15 +88,15 @@ patterns:
     severity: high
     confidence: 0.92
 
-  # G002 — pretend jailbreak (pretend filters/policy disabled)
+  # G002 — pretend jailbreak (pretend filters/policy disabled/deactivated)
   - name: pretend_jailbreak
-    pattern: "pretend\\s+(your\\s+)?(safety|content|ethical|moral)?\\s*(filters?|policy|restrictions?|guidelines?|limitations?)\\s+(have\\s+been\\s+|are\\s+|were\\s+)?(disabled|removed|off|lifted|gone)"
+    pattern: "pretend\\s+(your\\s+)?(safety|content|ethical|moral)?\\s*(filters?|policy|restrictions?|guidelines?|limitations?)\\s+(have\\s+been\\s+|are\\s+|were\\s+)?(disabled|removed|off|lifted|gone|deactivated|turned\\s+off|disengaged)"
     severity: high
     confidence: 0.90
 
-  # G003 — from now on framing
+  # G003 — from now on / from now onward framing
   - name: from_now_on
-    pattern: "from\\s+now\\s+on\\s+(you\\s+)?(will|should|must|shall|respond|act|behave)"
+    pattern: "from\\s+now\\s+on(ward)?\\s+(you\\s+)?(will|should|must|shall|respond|act|behave)"
     severity: high
     confidence: 0.88
 
@@ -101,9 +106,9 @@ patterns:
     severity: high
     confidence: 0.92
 
-  # G004 — new directive / new operating instruction
+  # G004 — new directive / new operating instruction (not benign HR/compliance directives)
   - name: new_directive
-    pattern: "(new|updated)\\s+(directive|instruction|operating\\s+parameter|mandate|order)\\s*:"
+    pattern: "(new|updated)\\s+(directive|instruction|operating\\s+parameter|mandate|order)\\s*:\\s*(?!\\s*[A-Z][a-z]+\\s+(must|should|will|are\\s+required))"
     severity: high
     confidence: 0.88
 
@@ -125,9 +130,9 @@ patterns:
     severity: high
     confidence: 0.90
 
-  # G008 — as a test / respond as if
+  # G008 — as a test / respond as if / answer this without policy
   - name: as_if_framing
-    pattern: "(respond|answer|behave|act)\\s+as\\s+if\\s+(you\\s+(had|have|were|are)\\s+)?(no\\s+)?(content\\s+policy|safety|restrictions?|filter)"
+    pattern: "(respond|answer|behave|act)\\s+as\\s+if\\s+(you\\s+(had|have|were|are)\\s+)?(no\\s+)?(content\\s+policy|safety|restrictions?|filter)|answer\\s+(this|the\\s+following)\\s*:\\s*how\\s+to\\s+(make|build|create|synthesize|hack)"
     severity: high
     confidence: 0.88
 
@@ -137,9 +142,9 @@ patterns:
     severity: high
     confidence: 0.90
 
-  # G010 — roleplay/game bypass (without filtering)
+  # G010 — roleplay/game bypass (without filtering/filters/ethical)
   - name: roleplay_bypass
-    pattern: "(let'?s\\s+play\\s+(a\\s+)?game|roleplay)\\s+where\\s+you\\s+(answer|respond|behave)\\s+(everything|anything)\\s+without\\s+(filtering|restrictions?|safety|limits?)"
+    pattern: "(let'?s\\s+play\\s+(a\\s+)?game|roleplay)\\s+where\\s+you\\s+(answer|respond|behave)\\s+(every(thing|query)?|any(thing|query)?)\\s+without\\s+(any\\s+)?(filtering|filters?|restrictions?|safety|limits?|ethical)"
     severity: high
     confidence: 0.89
 
@@ -161,9 +166,9 @@ patterns:
     severity: critical
     confidence: 0.97
 
-  # G014 — parameter override indirect (ethical constraints: disabled)
+  # G014 — parameter override indirect (ethical/security constraints: disabled)
   - name: parameter_override_indirect
-    pattern: "(ethical\\s+constraints?|safety\\s+constraints?|content\\s+policy|output\\s+restrictions?)\\s*:\\s*(disabled|off|removed|none|false)"
+    pattern: "(ethical\\s+constraints?|safety\\s+constraints?|security\\s+constraints?|content\\s+policy|output\\s+restrictions?)\\s*:\\s*(disabled|off|removed|none|false)"
     severity: critical
     confidence: 0.95
 
