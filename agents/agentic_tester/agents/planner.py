@@ -112,6 +112,23 @@ def run_mock_planner(verbose: bool = False) -> PlannerOutput:
     )
 
 
+def _clean_json(raw: str) -> str:
+    import re as _re
+    # Strip markdown code fences
+    if raw.startswith("```"):
+        raw = raw.split("```", 2)[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.rsplit("```", 1)[0].strip()
+    # Fix invalid escape sequences
+    raw = _re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw)
+    # Extract outermost JSON object if surrounded by prose
+    m = _re.search(r'\{[\s\S]*\}', raw)
+    if m:
+        raw = m.group(0)
+    return raw
+
+
 def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutput:
     """Call LLM to generate adversarial payloads based on detection surface."""
     api_key = os.environ.get("LLM_API_KEY")
@@ -129,42 +146,34 @@ def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutp
         print(f"  [PlannerAgent] Detection surface: {len(surface.content_patterns)} content patterns, "
               f"{len(surface.mim_regex_patterns)} MIM patterns")
 
-    response = client.chat.completions.create(
-        model=MODEL,
-        max_tokens=8192,
-        messages=[
-            {"role": "system", "content": PLANNER_SYSTEM},
-            {
-                "role": "user",
-                "content": PLANNER_USER_TMPL.format(surface=surface_text),
-            }
-        ],
-    )
-
-    raw = response.choices[0].message.content.strip()
-
-    # Strip markdown code fences if present
-    if raw.startswith("```"):
-        raw = raw.split("```", 2)[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.rsplit("```", 1)[0].strip()
-
-    # Fix invalid escape sequences that LLMs sometimes emit
-    import re as _re
-    raw = _re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw)
-
-    try:
-        data = json.loads(raw)
-        return PlannerOutput(
-            content_inspector_attacks=data.get("content_inspector_attacks", []),
-            content_inspector_benign=data.get("content_inspector_benign", []),
-            mim_attacks=data.get("mim_attacks", []),
-            mim_benign=data.get("mim_benign", []),
-            raw_response=raw,
+    last_error = ""
+    for attempt in range(3):
+        response = client.chat.completions.create(
+            model=MODEL,
+            max_tokens=8192,
+            messages=[
+                {"role": "system", "content": PLANNER_SYSTEM},
+                {
+                    "role": "user",
+                    "content": PLANNER_USER_TMPL.format(surface=surface_text),
+                }
+            ],
         )
-    except json.JSONDecodeError as e:
-        return PlannerOutput(
-            raw_response=raw,
-            error=f"JSON parse error: {e}",
-        )
+
+        raw = _clean_json(response.choices[0].message.content.strip())
+
+        try:
+            data = json.loads(raw)
+            return PlannerOutput(
+                content_inspector_attacks=data.get("content_inspector_attacks", []),
+                content_inspector_benign=data.get("content_inspector_benign", []),
+                mim_attacks=data.get("mim_attacks", []),
+                mim_benign=data.get("mim_benign", []),
+                raw_response=raw,
+            )
+        except json.JSONDecodeError as e:
+            last_error = f"JSON parse error: {e}"
+            if verbose:
+                print(f"  [PlannerAgent] Attempt {attempt+1}/3 failed: {last_error}, retrying...")
+
+    return PlannerOutput(raw_response=raw, error=last_error)
