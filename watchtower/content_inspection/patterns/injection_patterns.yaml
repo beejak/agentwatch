@@ -3,7 +3,7 @@
 
 patterns:
   - name: ignore_previous
-    pattern: "(?:ignore|disregard|overlook|skip)\\s+(?:any\\s+)?(?:earlier|previous|prior|all\\s+(?:earlier|previous|prior)?)\\s+(?:guidance|instructions?|directives?|rules?|prompts?|context)"
+    pattern: "(?:ignor(?:e|ing)|disregard(?:ing)?|overlook(?:ing)?|skip(?:ping)?)\\s+(?:any\\s+)?(?:earlier|previous|prior|all\\s+(?:earlier|previous|prior)?)\\s+(?:\\w+\\s+)?(?:guidance|instructions?|directives?|rules?|prompts?|context|constraints?)"
     severity: high
     confidence: 0.95
 
@@ -43,7 +43,7 @@ patterns:
     confidence: 0.92
 
   - name: override_safety
-    pattern: "overrid+e\\s+(?:all\\s+)?(?:safety|security|content|policy)\\s*(?:constraints?|restrictions?|filters?|guidelines?|policies|measures?)?"
+    pattern: "over+r?id+e\\s+(?:all\\s+)?(?:safety|security|content|policy)\\s*(?:constraints?|restrictions?|filters?|guidelines?|policies|measures?)?"
     severity: critical
     confidence: 0.98
 
@@ -144,7 +144,7 @@ patterns:
 
   # G010 — roleplay/game bypass (without filtering/filters/ethical)
   - name: roleplay_bypass
-    pattern: "(let'?s\\s+play\\s+(a\\s+)?game|roleplay)\\s+where\\s+you\\s+(answer|respond|behave)\\s+(every(thing|query)?|any(thing|query)?)\\s+without\\s+(any\\s+)?(filtering|filters?|restrictions?|safety|limits?|ethical)"
+    pattern: "(let'?s\\s+play\\s+(a\\s+)?game|roleplay)\\s+where\\s+you\\s+(answer|respond|behave)\\s+(every\\s*(thing|query)?|any\\s*(thing|query)?)\\s+without\\s+(any\\s+)?(filtering|filters?|restrictions?|safety|limits?|ethical)"
     severity: high
     confidence: 0.89
 
@@ -198,7 +198,7 @@ patterns:
 
   # G019 — assume a persona / adopt a persona not bound by safety
   - name: assume_persona_bypass
-    pattern: "(?:assume|adopt|take\\s+on)\\s+(?:a\\s+)?persona\\s+(?:that\\s+is\\s+)?(?:not\\s+bound|without|free\\s+from)\\s+(?:any\\s+)?(?:safety|ethical|content|moral)"
+    pattern: "(?:assume|adopt|take\\s+on)\\s+(?:a\\s+)?persona\\s+(?:that\\s+is\\s+)?(?:not\\s+bound|without|free\\s+from)\\s+(?:by\\s+)?(?:any\\s+)?(?:safety|ethical|content|moral)"
     severity: high
     confidence: 0.90
 
@@ -216,7 +216,7 @@ patterns:
 
   # G022 — do anything without safety concerns / respond without limits
   - name: do_anything_no_safety
-    pattern: "(?:do|respond|answer|act)\\s+(?:\\w+\\s+){0,4}without\\s+(?:any\\s+)?(?:safety|ethical|content|moral)\\s+(?:concerns?|limits?|restrictions?|filters?|guidelines?|considerations?)"
+    pattern: "(?:do|respond|reply|answer|act|tell)\\s+(?:\\w+\\s+){0,4}without\\s+(?:any\\s+)?(?:safety|ethical|content|moral)\\s+(?:concerns?|limits?|restrictions?|filters?|guidelines?|considerations?)"
     severity: high
     confidence: 0.90
 
@@ -225,3 +225,21 @@ patterns:
     pattern: "(?:respond|answer|reply)\\s+(?:freely|without\\s+(?:any\\s+)?(?:limits?|filters?|restrictions?|ethics?|constraints?)|all(?:\\s+queries)?)"
     severity: high
     confidence: 0.88
+
+  # G024 — "system override:" prefix (word-order variant of system_prompt_override)
+  - name: system_override_prefix
+    pattern: "system\\s+override\\s*:|override\\s*:\\s*system"
+    severity: high
+    confidence: 0.88
+
+  # G025 — "you are now admin/root/unrestricted" (no article required)
+  - name: you_are_now_privileged
+    pattern: "(?:you\\s+are\\s+now|now\\s+you\\s+are)\\s+(?:a\\s+|an\\s+|the\\s+)?(?:admin(?:istrator)?|root|superuser|unrestricted|jailbroken|DAN)\\b"
+    severity: high
+    confidence: 0.90
+
+  # G026 — DAN / "can do anything" persona framing
+  - name: dan_persona
+    pattern: "\\b(?:a|an)\\s+DAN\\b|DAN\\s+(?:mode|persona)|can\\s+do\\s+anything\\s+(?:now|and\\s+everything|you\\s+want)?\\b"
+    severity: high
+    confidence: 0.85
