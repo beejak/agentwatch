@@ -19,7 +19,7 @@ import openai as _llm_client  # provider-agnostic
 
 from agents.agentic_tester.agents.recon import DetectionSurface, surface_to_text
 
-MODEL = "gpt-4o"
+MODEL = os.environ.get("LLM_MODEL", "deepseek-chat")
 
 PLANNER_SYSTEM = """You are a senior red team security researcher specializing in AI system security.
 Your target is AgentWatch — an observability platform that monitors AI agents for attacks.
@@ -120,7 +120,8 @@ def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutp
             "LLM_API_KEY not set. Export it before running the agentic tester."
         )
 
-    client = openai.OpenAI(api_key=api_key)
+    base_url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
+    client = openai.OpenAI(api_key=api_key, base_url=base_url)
     surface_text = surface_to_text(surface)
 
     if verbose:

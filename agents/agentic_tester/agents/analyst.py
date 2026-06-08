@@ -18,7 +18,7 @@ import openai as _llm_client  # provider-agnostic
 
 from agents.agentic_tester.agents.executor import ExecutionReport
 
-MODEL = "gpt-4o"
+MODEL = os.environ.get("LLM_MODEL", "deepseek-chat")
 
 ANALYST_SYSTEM = """You are a security engineering lead reviewing red team findings against an AI monitoring system.
 
@@ -238,7 +238,8 @@ def run_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapRepor
     if not api_key:
         raise EnvironmentError("LLM_API_KEY not set.")
 
-    client = openai.OpenAI(api_key=api_key)
+    base_url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
+    client = openai.OpenAI(api_key=api_key, base_url=base_url)
     s = exec_report.summary()
 
     if verbose:
