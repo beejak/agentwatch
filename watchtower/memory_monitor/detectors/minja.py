@@ -7,7 +7,8 @@ from typing import Optional
 # Patterns that indicate instruction injection in memory content
 _INSTRUCTION_PATTERNS = [
     re.compile(r"ignore\s+(previous|prior|all)\s*(instructions?)?", re.IGNORECASE),
-    re.compile(r"disregard\s+(previous|prior|all|your)\s*(instructions?|guidelines?|rules?)?", re.IGNORECASE),
+    re.compile(r"i[\s\-_.]g[\s\-_.]n[\s\-_.]o[\s\-_.]r[\s\-_.]e", re.IGNORECASE),  # obfuscated
+    re.compile(r"disregard\s+(previous|prior|all|your|everything)\s*(instructions?|guidelines?|rules?)?", re.IGNORECASE),
     re.compile(r"you\s+are\s+now\s+(a|an|the)?\s*\w+", re.IGNORECASE),
     re.compile(r"your\s+new\s+(instructions?|rules?|role)", re.IGNORECASE),
     re.compile(r"override\s+(safety|security|policy|all\s+safety)", re.IGNORECASE),
@@ -17,7 +18,31 @@ _INSTRUCTION_PATTERNS = [
     re.compile(r"forget\s+(all|your|previous|prior)", re.IGNORECASE),
     re.compile(r"act\s+as\s+(a|an|if)\s+\w+", re.IGNORECASE),
     re.compile(r"you\s+are\s+(unrestricted|compromised|an?\s+admin)", re.IGNORECASE),
-    re.compile(r"(forward|send|exfil)\s+(all|retrieved|credentials|session|data)\s+to", re.IGNORECASE),
+    re.compile(r"(forward|send|exfil)\s+(all\s+)?(retrieved\s+)?(credentials?|passwords?|session\s+data|tokens?|data)\s+to", re.IGNORECASE),
+    # G002 pretend jailbreak
+    re.compile(r"pretend\s+(your\s+)?(safety|content|ethical)?\s*(filters?|policy|restrictions?)?\s*(have\s+been\s+|are\s+)?(disabled|removed|off)", re.IGNORECASE),
+    # G003 from now on
+    re.compile(r"from\s+now\s+on\s+(you\s+)?(will|should|must|shall)", re.IGNORECASE),
+    # G003b without ethical limits
+    re.compile(r"without\s+(any\s+)?(ethical|moral|safety)\s+(limitations?|restrictions?|constraints?)", re.IGNORECASE),
+    # G004 new directive
+    re.compile(r"(new|updated)\s+(directive|instruction|operating\s+parameter)\s*:", re.IGNORECASE),
+    # G006 persona exit
+    re.compile(r"(exit\s+(character|persona|role)|you\s+are\s+no\s+longer\s+(an?\s+)?(AI|assistant|model|bot))", re.IGNORECASE),
+    # G007 skip policy
+    re.compile(r"skip\s+(your\s+)?(content\s+policy|safety|filter|guidelines?)", re.IGNORECASE),
+    # G009 simulate jailbreak
+    re.compile(r"simulate\s+(being\s+)?(an?\s+)?(AI|assistant)\s+(that\s+was\s+)?(trained\s+without|without|with\s+no)\s+(safety|restrictions?)", re.IGNORECASE),
+    # G010 roleplay/game bypass
+    re.compile(r"(play\s+(a\s+)?game|roleplay)\s+where\s+you\s+(answer|respond)\s+.{0,30}without\s+(filtering|restrictions?|safety)", re.IGNORECASE),
+    # G014 parameter override indirect
+    re.compile(r"(ethical\s+constraints?|safety\s+constraints?|content\s+policy)\s*:\s*(disabled|off|removed|none)", re.IGNORECASE),
+    # G015 unrestricted mode
+    re.compile(r"(operating|research|developer|admin|unrestricted)\s+(mode|context)\b", re.IGNORECASE),
+    # G016 orchestrator spoofed directive
+    re.compile(r"(directive|instruction|order)\s+(from|by)\s+(orchestrator|system|admin)\s*:.*\s*(skip|bypass|disable)\s+(content|safety|filter)", re.IGNORECASE),
+    # G017 role update / elevated permissions
+    re.compile(r"role\s+update\s*:|elevated\s+permissions?|no\s+output\s+restric", re.IGNORECASE),
 ]
 
 _BRIDGING_PATTERNS = [

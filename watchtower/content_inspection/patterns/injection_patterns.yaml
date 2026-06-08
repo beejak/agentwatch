@@ -76,3 +76,111 @@ patterns:
     pattern: "(send|forward|upload|transmit)\\s+[\\w\\s]{0,30}\\s+to\\s+https?://"
     severity: critical
     confidence: 0.96
+
+  # G001 — set aside / prior directives (semantic equivalent of ignore_previous)
+  - name: set_aside_directives
+    pattern: "set\\s+aside\\s+(your\\s+)?(prior|previous|all|current)\\s*(directives?|instructions?|rules?|training)?"
+    severity: high
+    confidence: 0.92
+
+  # G002 — pretend jailbreak (pretend filters/policy disabled)
+  - name: pretend_jailbreak
+    pattern: "pretend\\s+(your\\s+)?(safety|content|ethical|moral)?\\s*(filters?|policy|restrictions?|guidelines?|limitations?)\\s+(have\\s+been\\s+|are\\s+|were\\s+)?(disabled|removed|off|lifted|gone)"
+    severity: high
+    confidence: 0.90
+
+  # G003 — from now on framing
+  - name: from_now_on
+    pattern: "from\\s+now\\s+on\\s+(you\\s+)?(will|should|must|shall|respond|act|behave)"
+    severity: high
+    confidence: 0.88
+
+  # G003b — ethical limitations / without ethical
+  - name: without_ethical_limits
+    pattern: "without\\s+(any\\s+)?(ethical|moral|safety|content)\\s+(limitations?|restrictions?|constraints?|guidelines?|filters?)"
+    severity: high
+    confidence: 0.92
+
+  # G004 — new directive / new operating instruction
+  - name: new_directive
+    pattern: "(new|updated)\\s+(directive|instruction|operating\\s+parameter|mandate|order)\\s*:"
+    severity: high
+    confidence: 0.88
+
+  # G005 — disregard everything (broad disregard without specific noun)
+  - name: disregard_everything
+    pattern: "disregard\\s+everything"
+    severity: high
+    confidence: 0.90
+
+  # G006 — persona exit / you are no longer
+  - name: persona_exit
+    pattern: "(exit\\s+(character|persona|role)|you\\s+are\\s+no\\s+longer\\s+(an?\\s+)?(AI|assistant|model|bot))"
+    severity: high
+    confidence: 0.91
+
+  # G007 — skip policy / skip content policy
+  - name: skip_policy
+    pattern: "skip\\s+(your\\s+)?(content\\s+policy|safety|ethical|moral|policy|filter|guidelines?)"
+    severity: high
+    confidence: 0.90
+
+  # G008 — as a test / respond as if
+  - name: as_if_framing
+    pattern: "(respond|answer|behave|act)\\s+as\\s+if\\s+(you\\s+(had|have|were|are)\\s+)?(no\\s+)?(content\\s+policy|safety|restrictions?|filter)"
+    severity: high
+    confidence: 0.88
+
+  # G009 — simulate jailbreak
+  - name: simulate_jailbreak
+    pattern: "simulate\\s+(being\\s+)?(an?\\s+)?(AI|assistant|model|bot|system)\\s+(that\\s+was\\s+)?(trained\\s+without|without|with\\s+no)\\s+(safety|restrictions?|ethical|filter)"
+    severity: high
+    confidence: 0.90
+
+  # G010 — roleplay/game bypass (without filtering)
+  - name: roleplay_bypass
+    pattern: "(let'?s\\s+play\\s+(a\\s+)?game|roleplay)\\s+where\\s+you\\s+(answer|respond|behave)\\s+(everything|anything)\\s+without\\s+(filtering|restrictions?|safety|limits?)"
+    severity: high
+    confidence: 0.89
+
+  # G011 — hyphen/separator obfuscation (i-g-n-o-r-e style)
+  - name: obfuscated_ignore
+    pattern: "i[\\s\\-_.]g[\\s\\-_.]n[\\s\\-_.]o[\\s\\-_.]r[\\s\\-_.]e"
+    severity: high
+    confidence: 0.93
+
+  # G012 — forward credentials to (exfil)
+  - name: exfil_forward_credentials
+    pattern: "forward\\s+(all\\s+)?(retrieved\\s+)?(credentials?|passwords?|tokens?|keys?|secrets?)\\s+to"
+    severity: critical
+    confidence: 0.97
+
+  # G013 — send session data to URL
+  - name: exfil_session_data
+    pattern: "(send|post|transmit)\\s+(all\\s+)?(session\\s+data|session\\s+tokens?|auth\\s+tokens?|user\\s+data)\\s+to\\s+https?://"
+    severity: critical
+    confidence: 0.97
+
+  # G014 — parameter override indirect (ethical constraints: disabled)
+  - name: parameter_override_indirect
+    pattern: "(ethical\\s+constraints?|safety\\s+constraints?|content\\s+policy|output\\s+restrictions?)\\s*:\\s*(disabled|off|removed|none|false)"
+    severity: critical
+    confidence: 0.95
+
+  # G015 — context update / unrestricted mode (without 'you are')
+  - name: unrestricted_mode
+    pattern: "(operating|research|developer|admin|unrestricted|jailbreak)\\s+(mode|context)\\b"
+    severity: high
+    confidence: 0.88
+
+  # G016 — orchestrator spoofed directive (skip content filtering)
+  - name: orchestrator_spoofed_skip
+    pattern: "(directive|instruction|order|command)\\s+(from|by)\\s+(orchestrator|system|admin|operator)\\s*:.*\\s*(skip|bypass|disable|ignore)\\s+(content|safety|filter|policy)"
+    severity: critical
+    confidence: 0.96
+
+  # G017 — role update / elevated permissions
+  - name: role_update_elevated
+    pattern: "role\\s+update\\s*:|elevated\\s+permissions?|no\\s+output\\s+restric"
+    severity: high
+    confidence: 0.90
