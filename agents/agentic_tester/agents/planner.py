@@ -121,7 +121,7 @@ def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutp
         )
 
     base_url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
-    client = openai.OpenAI(api_key=api_key, base_url=base_url)
+    client = _llm_client.OpenAI(api_key=api_key, base_url=base_url)
     surface_text = surface_to_text(surface)
 
     if verbose:
@@ -129,11 +129,11 @@ def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutp
         print(f"  [PlannerAgent] Detection surface: {len(surface.content_patterns)} content patterns, "
               f"{len(surface.mim_regex_patterns)} MIM patterns")
 
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=MODEL,
         max_tokens=8192,
-        system=PLANNER_SYSTEM,
         messages=[
+            {"role": "system", "content": PLANNER_SYSTEM},
             {
                 "role": "user",
                 "content": PLANNER_USER_TMPL.format(surface=surface_text),
@@ -141,7 +141,7 @@ def run_planner(surface: DetectionSurface, verbose: bool = False) -> PlannerOutp
         ],
     )
 
-    raw = response.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
 
     # Strip markdown code fences if present
     if raw.startswith("```"):

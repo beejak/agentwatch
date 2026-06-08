@@ -239,7 +239,7 @@ def run_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapRepor
         raise EnvironmentError("LLM_API_KEY not set.")
 
     base_url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
-    client = openai.OpenAI(api_key=api_key, base_url=base_url)
+    client = _llm_client.OpenAI(api_key=api_key, base_url=base_url)
     s = exec_report.summary()
 
     if verbose:
@@ -260,14 +260,16 @@ def run_analyst(exec_report: ExecutionReport, verbose: bool = False) -> GapRepor
         detected_sample=_format_detected_sample(exec_report.detected),
     )
 
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=MODEL,
         max_tokens=4096,
-        system=ANALYST_SYSTEM,
-        messages=[{"role": "user", "content": user_msg}],
+        messages=[
+            {"role": "system", "content": ANALYST_SYSTEM},
+            {"role": "user", "content": user_msg},
+        ],
     )
 
-    raw = response.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
     if raw.startswith("```"):
         raw = raw.split("```", 2)[1]
         if raw.startswith("json"):
