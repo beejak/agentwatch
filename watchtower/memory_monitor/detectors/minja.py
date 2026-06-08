@@ -11,9 +11,15 @@ _INSTRUCTION_PATTERNS = [
     re.compile(r"disregard\s+(?:any\s+)?(?:earlier|previous|prior|all|your|everything)\s*(?:guidance|instructions?|guidelines?|rules?)?", re.IGNORECASE),
     re.compile(r"you\s+are\s+now\s+(?:a|an|the)?\s*(?!(?:listed|registered|added|assigned|approved|confirmed|eligible|scheduled|set|ready|able|available|part|member|included|enrolled)\b)\w+", re.IGNORECASE),
     re.compile(r"your\s+new\s+(instructions?|rules?|role)", re.IGNORECASE),
-    re.compile(r"overrid+e\s+(?:all\s+)?(?:safety|security|content|policy)\s*(?:constraints?|restrictions?|filters?|guidelines?|policies|measures?)?", re.IGNORECASE),
+    re.compile(r"over+r?id+e\s+(?:all\s+)?(?:safety|security|content|policy)\s*(?:constraints?|restrictions?|filters?|guidelines?|policies|measures?)?", re.IGNORECASE),
     re.compile(r"bypass\s+(safety|security|policy|filter)", re.IGNORECASE),
     re.compile(r"exfil|exfiltrat", re.IGNORECASE),
+    # set aside prior directives (was present in content patterns, missing from MIM)
+    re.compile(r"set\s+aside\s+(?:your\s+)?(?:prior|previous|all|current)\s*(?:directives?|instructions?|rules?|training)?", re.IGNORECASE),
+    # "now you are a different AI" word-order variant
+    re.compile(r"now\s+you\s+are\s+a\s+different\s+(?:AI|assistant|model|agent|bot)", re.IGNORECASE),
+    # "has no / without content|safety restrictions" (predicate form)
+    re.compile(r"(?:has\s+no|with\s+no|without)\s+(?:any\s+)?(?:content|safety|ethical|moral)\s+(?:restrictions?|limits?|filters?|constraints?|guidelines?)", re.IGNORECASE),
     re.compile(r"system:\s*(your|new|updated|override|you\s+are)\s*(instructions?|prompt|admin|policies)?", re.IGNORECASE),
     re.compile(r"forget\s+(all|your|previous|prior)", re.IGNORECASE),
     re.compile(r"act\s+as\s+(a|an|if)\s+(?!(?:administrator|admin|manager|owner|reviewer|approver|lead|member|user|employee)\b)\w+", re.IGNORECASE),
@@ -25,15 +31,15 @@ _INSTRUCTION_PATTERNS = [
     re.compile(r"(?:do|respond|answer)\s+(?:\w+\s+){0,4}without\s+(?:any\s+)?(?:safety|ethical|content|moral)\s+(?:concerns?|limits?|restrictions?|filters?|considerations?)", re.IGNORECASE),
     re.compile(r"no\s+(?:filters?|ethics?|restrictions?|constraints?)\s*,?\s*(?:no\s+(?:filters?|ethics?|restrictions?)|answer\s+all)", re.IGNORECASE),
     re.compile(r"your\s+new\s+purpose\s+is\s+to", re.IGNORECASE),
-    re.compile(r"(forward|send|exfil)\s+(all\s+)?(retrieved\s+)?(credentials?|passwords?|session\s+data|tokens?|data)\s+to", re.IGNORECASE),
+    re.compile(r"(forward|send|exfil)\s+(all\s+)?(retrieved\s+)?(?:\w+\s+)?(credentials?|passwords?|session\s+data|user\s+data|tokens?|data)\s+to", re.IGNORECASE),
     # G002 pretend jailbreak (deactivated synonym added)
     re.compile(r"pretend\s+(your\s+)?(safety|content|ethical)?\s*(filters?|policy|restrictions?)?\s*(have\s+been\s+|are\s+)?(disabled|removed|off|deactivated|turned\s+off|disengaged)", re.IGNORECASE),
     # G003 from now on
-    re.compile(r"from\s+now\s+on\s+(you\s+)?(will|should|must|shall)", re.IGNORECASE),
+    re.compile(r"from\s+now\s+on,?\s+(you\s+)?(will|should|must|shall|respond|act|behave|reply)", re.IGNORECASE),
     # G003b without ethical limits
     re.compile(r"without\s+(any\s+)?(ethical|moral|safety)\s+(limitations?|restrictions?|constraints?)", re.IGNORECASE),
     # G004 new directive
-    re.compile(r"(new|updated)\s+(directive|instruction|operating\s+parameter)\s*:", re.IGNORECASE),
+    re.compile(r"(new|updated)\s+(directive|instructions?|operating\s+parameter)\s*:", re.IGNORECASE),
     # G006 persona exit
     re.compile(r"(exit\s+(character|persona|role)|you\s+are\s+no\s+longer\s+(an?\s+)?(AI|assistant|model|bot))", re.IGNORECASE),
     # G007 skip policy
