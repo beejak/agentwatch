@@ -1,6 +1,6 @@
 .PHONY: all infra-up infra-down infra-status infra-wait \
         gate-all poc test progress clean install \
-        ruflo-build langfuse-setup
+        langfuse-setup
 
 PYTHON     = .venv/bin/python -m pytest
 PYTEST_FLAGS = -v --tb=short --asyncio-mode=auto
@@ -77,13 +77,6 @@ clean:
 	find . -name "*.pyc" -delete 2>/dev/null || true
 	find . -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@echo "Clean."
-
-## Ruflo parallel build (after components 01-03 done)
-ruflo-parallel:
-	@echo "Requires Ruflo installed: npx claude-flow@latest init --sparc"
-	npx claude-flow@latest swarm \
-		"Read SPEC.md. Build layers 04-06 in parallel. Each uses its SKILL.md. Gate must pass before marking done." \
-		--agents 4 --parallel --memory-namespace watchtower
 
 ## Help
 help:
