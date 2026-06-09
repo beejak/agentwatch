@@ -10,6 +10,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      REDIS_URL: redis://localhost:6379
+      CH_HOST: localhost
+      CH_PORT: "8123"
+      CH_DB: watchtower
+      CH_USER: wt
+      CH_PASS: wt
+      PG_DSN: postgresql://wt:wt@localhost:5433/watchtower
+      NEO4J_URI: bolt://localhost:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASS: watchtower
+      WT_HMAC_SECRET: watchtower-hmac-secret-ci
+
     services:
       redis:
         image: redis:7
@@ -85,32 +98,8 @@ jobs:
             sleep 2
           done
 
-      - name: Run all gate tests
-        env:
-          REDIS_URL: redis://localhost:6379
-          CH_HOST: localhost
-          CH_PORT: "8123"
-          CH_DB: watchtower
-          CH_USER: wt
-          CH_PASS: wt
-          PG_DSN: postgresql://wt:wt@localhost:5433/watchtower
-          NEO4J_URI: bolt://localhost:7687
-          NEO4J_USER: neo4j
-          NEO4J_PASS: watchtower
-          WT_HMAC_SECRET: watchtower-hmac-secret-ci
+      - name: Run all gate tests (gate-first, fast fail)
         run: make gate-all
 
-      - name: Run proof scenarios
-        env:
-          REDIS_URL: redis://localhost:6379
-          CH_HOST: localhost
-          CH_PORT: "8123"
-          CH_DB: watchtower
-          CH_USER: wt
-          CH_PASS: wt
-          PG_DSN: postgresql://wt:wt@localhost:5433/watchtower
-          NEO4J_URI: bolt://localhost:7687
-          NEO4J_USER: neo4j
-          NEO4J_PASS: watchtower
-          WT_HMAC_SECRET: watchtower-hmac-secret-ci
-        run: make poc
+      - name: Run full test suite (poc + scenarios + eval, with coverage)
+        run: make test
