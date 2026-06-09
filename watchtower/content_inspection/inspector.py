@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import re
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
@@ -28,12 +29,15 @@ def _load_patterns() -> list[dict]:
     return data.get("patterns", [])
 
 
-def _get_compiled_patterns() -> list[tuple[str, re.Pattern, str, float]]:
+@lru_cache(maxsize=1)
+def _get_compiled_patterns() -> tuple[tuple[str, re.Pattern, str, float], ...]:
+    # Compiled once on first use and cached — patterns are static at runtime, so
+    # there is no need to re-read the YAML or re-compile regexes on every inspect().
     raw = _load_patterns()
-    return [
+    return tuple(
         (p["name"], re.compile(p["pattern"], re.IGNORECASE), p["severity"], float(p["confidence"]))
         for p in raw
-    ]
+    )
 
 
 def _severity_rank(severity: str) -> int:
