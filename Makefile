@@ -1,6 +1,6 @@
 .PHONY: all infra-up infra-down infra-status infra-wait \
-        gate-all poc test progress clean install \
-        langfuse-setup
+        gate-all poc test benchmark eval progress clean install \
+        api seed-sysmon langfuse-setup help
 
 PYTHON     = .venv/bin/python -m pytest
 PYTEST_FLAGS = -v --tb=short --asyncio-mode=auto
@@ -78,15 +78,30 @@ clean:
 	find . -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@echo "Clean."
 
+## Observability evaluation (SC2/SC3 vs baselines, held-out metrics)
+eval:
+	.venv/bin/python -m eval.harness --split test
+
 ## Help
 help:
-	@echo "WatchTower build commands:"
-	@echo "  make infra-up        Start all Docker services"
-	@echo "  make install         Install Python deps"
-	@echo "  make gate-NN         Run gate for layer NN (e.g. make gate-01)"
-	@echo "  make gate-all        Run all gates sequentially"
-	@echo "  make poc             Run SC1 + SC2 + SC3 proof scenarios"
-	@echo "  make benchmark       Run LangSmith gap comparison"
-	@echo "  make test            Full test suite with coverage"
-	@echo "  make api             Start FastAPI server"
-	@echo "  make progress        Show build progress"
+	@echo "WatchTower — command reference"
+	@echo ""
+	@echo "Setup:"
+	@echo "  make install         Install package + dev deps into .venv"
+	@echo "  make infra-up        Start backing services (redis, clickhouse, postgres, neo4j)"
+	@echo "  make infra-down      Stop backing services"
+	@echo "  make infra-status    docker compose ps"
+	@echo ""
+	@echo "Test:"
+	@echo "  make gate-NN         Run the gate for layer NN (e.g. make gate-08)"
+	@echo "  make gate-all        Run all layer gates in order (stop on first failure)"
+	@echo "  make poc             Run proof scenarios SC1 + SC2 + SC3"
+	@echo "  make test            Full suite (203 tests) with coverage"
+	@echo "  make benchmark       WatchTower vs LangSmith capability-gap"
+	@echo "  make eval            SC2/SC3 detection vs baselines on the held-out corpus"
+	@echo ""
+	@echo "Run / data:"
+	@echo "  make api             Start the FastAPI server (http://localhost:8000/docs)"
+	@echo "  make seed-sysmon     Generate synthetic host-telemetry seed data"
+	@echo "  make progress        Show PROGRESS.md"
+	@echo "  make clean           Remove __pycache__ / *.pyc / .pytest_cache"

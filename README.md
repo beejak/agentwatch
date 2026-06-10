@@ -55,7 +55,110 @@ It observes the three attack surfaces of agentic systems — input corruption, c
 | `watchtower/api/` | FastAPI surface over the chronicle + verdicts |
 | `watchtower/host_telemetry/` | Sysmon / Falco host-event correlation (process_guid) |
 
-See [`SPEC.md`](SPEC.md) for the full layer/gate/invariant specification.
+See [`SPEC.md`](SPEC.md) for the full layer/gate/invariant specification, and
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for the data-flow, signal shape, and chronicle schema.
+
+---
+
+## Tech stack
+
+| Concern | Technology |
+|---------|-----------|
+| Language / runtime | **Python 3.12**, `asyncio` (all I/O is async) |
+| Data model / validation | **Pydantic v2** — canonical `Signal` shape, defined once |
+| API | **FastAPI** + **Uvicorn** (lifespan-managed) |
+| Chronicle (audit store) | **ClickHouse** — MergeTree, append-only, 90-day TTL |
+| Signal transport / bus | **Redis** streams (`wt:signals`, `wt:interceptor`) + pub/sub (`wt:memory_events`) |
+| Behavioral baseline / policy | **PostgreSQL** (pgvector image) |
+| Access graph / blast radius | **Neo4j** (bolt) |
+| Tracing (optional) | **Langfuse** |
+| Integrity | **HMAC-SHA256** signal signing; OTel-compatible signal fields |
+| Verdict LLM judge (sampled, off hot path) | OpenAI-compatible client (e.g. DeepSeek) |
+| Dev / CI | `uv`/`venv`, **Docker Compose**, `pytest`+`pytest-asyncio`+coverage, **GitHub Actions** |
+
+## Architecture
+
+Passive, append-only, side-car: agents emit HMAC-signed signals; WatchTower consumes,
+analyzes, and records — without modifying the agents.
+
+```mermaid
+flowchart TD
+  A["AI agents (multi-agent system)"] -->|"HMAC-signed Signals"| R["Redis stream wt:signals"]
+  R --> RX["Receiver L06 — HMAC verify"]
+  RX --> CI["Content Inspection L05"]
+  RX --> MM["Memory Integrity Monitor L07"]
+  RX --> DISC["Discovery L02"]
+  CI --> CH[("Chronicle L08 — ClickHouse append-only")]
+  MM --> CH
+  DISC --> CH
+  RX --> CH
+  CH --> VB["Verdict L09 + Baseline L10 + Coord-sigs L11"]
+  VB --> AN["Analyst L12 — SC1 attribution / SC2 silent / SC3 cross-layer"]
+  HOST["Host telemetry — Sysmon / Falco"] -->|"process_guid"| COR["Correlator L16"]
+  COR --> AN
+  AN --> IN["Interceptor L13 — halt / quarantine / revoke"]
+  IN -->|"every action logged"| CH
+  CH --> API["FastAPI L15 — /docs"]
+  NEO["Access graph — Neo4j"] -.->|"permission / blast radius"| VB
+  PG["Baseline + policy — PostgreSQL"] -.->|"profiles"| VB
+```
+
+## How it works
+
+1. **Emit.** Each agent step (tool call, LLM call, handoff, memory op) is emitted as a
+   `Signal` (20 OTel-compatible fields), **HMAC-signed**, onto the Redis `wt:signals` stream.
+2. **Verify + fan-out.** The Receiver checks the HMAC on *every* signal (reject if tampered),
+   then fans out to discovery, content-inspection, and the memory-integrity monitor.
+3. **Record.** Everything lands in the **append-only Chronicle** (ClickHouse) — no UPDATE,
+   no DELETE, ever. This is the forensic source of truth.
+4. **Judge + profile.** The verdict engine (deterministic → baseline → sampled LLM judge),
+   per-agent behavioral baseline, and coordination-signature library run over the chronicle.
+5. **Analyze.** The Analyst answers the three forensic questions — **SC1** (attribute a
+   coordination failure to agent/action/call-tree position), **SC2** (silent failures that
+   report success), **SC3** (agent self-report vs. host telemetry).
+6. **Act + log.** The Interceptor can halt/quarantine/revoke; every action is itself
+   chronicled. The FastAPI surface exposes traces, analyst results, and interceptor actions.
+
+## What's needed to run it
+
+- **Python 3.12** + the package (`pip install -e ".[dev]"` in a venv).
+- **Backing services** (via `docker compose up -d`, or equivalents): Redis, ClickHouse,
+  PostgreSQL, Neo4j. (A rootless single-binary ClickHouse suffices for the chronicle tests.)
+- **`WT_HMAC_SECRET`** shared between emitting agents and the Receiver.
+- **Agent-side emitter**: agents must publish `Signal`s to `wt:signals` (an OTel exporter or
+  the lightweight emitter in `agents/synthetic/`).
+- **Optional**: an OpenAI-compatible `LLM_API_KEY` for the sampled verdict judge; host
+  telemetry (Sysmon/Falco) feeding the correlator for SC3.
+
+## Network / deployment
+
+```mermaid
+flowchart LR
+  subgraph AGENTHOST["Agent host(s)"]
+    AGENTS["Agents + HMAC/OTel emitter"]
+    HTEL["Host telemetry (Sysmon/Falco)"]
+  end
+  subgraph WTSVC["WatchTower (sidecar / service)"]
+    RCV["Receiver + 16 layers"]
+    APISVC["FastAPI :8000"]
+  end
+  subgraph INFRA["Backing services (docker compose)"]
+    REDIS["Redis :6379"]
+    CHDB["ClickHouse :8123 / :9000"]
+    PG["PostgreSQL :5432"]
+    NEO["Neo4j :7687 / :7474"]
+    LF["Langfuse :3000 (optional)"]
+  end
+  AGENTS -->|"Signals → wt:signals"| REDIS
+  HTEL -->|"host events"| RCV
+  REDIS --> RCV
+  RCV --> CHDB
+  RCV --> PG
+  RCV --> NEO
+  RCV -. optional .-> LF
+  APISVC --> CHDB
+  OPER["Operator / dashboard"] -->|"HTTP"| APISVC
+```
 
 ---
 
