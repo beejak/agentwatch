@@ -394,6 +394,11 @@ async def slack_alert(msg: str, severity: str):
 
 ## Phase 8: Shadow Mode → Enforcement Mode
 
+> **Note:** Active *enforcement* (blocking, policy DSL, `WT_ENFORCEMENT_MODE`) now lives
+> in the separate **[agentwatch-firewall](https://github.com/beejak/agentwatch-firewall)**
+> repo. WatchTower itself is observation-only; this phase applies when the firewall is
+> deployed alongside it.
+
 **Never go straight to enforcement mode in production.**
 
 ### Week 1-2: Shadow Mode

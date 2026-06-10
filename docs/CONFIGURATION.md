@@ -145,5 +145,6 @@ To change: modify the TTL in `watchtower/chronicle/schema.sql` and recreate tabl
 [ ] Configure ClickHouse with replication if running multi-node
 
 [ ] Set WT_ENFORCEMENT_MODE (shadow → soft → enforce)
-    See PRODUCTION_INTEGRATION.md Phase 8
+    Enforcement lives in agentwatch-firewall (separate repo); WatchTower is
+    observation-only. See PRODUCTION_INTEGRATION.md Phase 8.
 ```

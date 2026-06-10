@@ -171,7 +171,7 @@ For LangChain / LangGraph integration and production SDK usage, see [PRODUCTION_
 make gate-NN        Run gate test for layer NN (01–16)
 make gate-all       Run all gates in order, stop on first failure
 make poc            Run SC1 + SC2 + SC3 proof scenarios
-make test           Full test suite (207 tests)
+make test           Full test suite (203 tests)
 make api            Start FastAPI server (port 8000)
 make infra-status   docker compose ps
 make progress       Show PROGRESS.md
