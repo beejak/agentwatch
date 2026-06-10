@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI
@@ -33,20 +34,9 @@ def set_analyst(analyst_manager):
     _analyst_manager = analyst_manager
 
 
-app = FastAPI(
-    title="WatchTower Agent Observability",
-    version="0.1.0",
-    description="Multi-layer agent observability and security platform",
-)
-
-# Include routers
-app.include_router(traces.router)
-app.include_router(analyst.router)
-app.include_router(interceptor.router)
-
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup/shutdown (replaces deprecated @app.on_event)."""
     global _reader, _analyst_manager
     import clickhouse_connect
     from watchtower.chronicle.reader import ChronicleReader
@@ -62,6 +52,23 @@ async def startup():
     writer = ChronicleWriter(client=ch)
     await writer.start()
     _interceptor._chronicle = writer
+    try:
+        yield
+    finally:
+        await writer.stop()
+
+
+app = FastAPI(
+    title="WatchTower Agent Observability",
+    version="0.1.0",
+    description="Multi-layer agent observability and security platform",
+    lifespan=lifespan,
+)
+
+# Include routers
+app.include_router(traces.router)
+app.include_router(analyst.router)
+app.include_router(interceptor.router)
 
 
 @app.get("/api/v1/health")
