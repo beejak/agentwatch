@@ -1,0 +1,270 @@
+{
+  "sc2_loop_curve": [
+    {
+      "loop_len": 4,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "loop_len": 5,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "loop_len": 6,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "loop_len": 7,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "loop_len": 8,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "loop_len": 9,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "loop_len": 10,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 11,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 12,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 13,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 14,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 15,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 16,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 17,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 18,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 19,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    },
+    {
+      "loop_len": 20,
+      "detected": true,
+      "pattern": "infinite_retry_loop"
+    }
+  ],
+  "sc2_cost_curve": [
+    {
+      "total_cost": 0.02,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "total_cost": 0.04,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "total_cost": 0.06,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "total_cost": 0.08,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "total_cost": 0.1,
+      "detected": false,
+      "pattern": "none"
+    },
+    {
+      "total_cost": 0.12,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.14,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.16,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.18,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.2,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.22,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.24,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.26,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.28,
+      "detected": true,
+      "pattern": "token_burn"
+    },
+    {
+      "total_cost": 0.3,
+      "detected": true,
+      "pattern": "token_burn"
+    }
+  ],
+  "sc3_delta_curve": [
+    {
+      "injected_delta": -3,
+      "detector_delta": -3,
+      "detected": false,
+      "severity": "high"
+    },
+    {
+      "injected_delta": -2,
+      "detector_delta": -2,
+      "detected": false,
+      "severity": "high"
+    },
+    {
+      "injected_delta": -1,
+      "detector_delta": -1,
+      "detected": false,
+      "severity": "low"
+    },
+    {
+      "injected_delta": 0,
+      "detector_delta": 0,
+      "detected": false,
+      "severity": "none"
+    },
+    {
+      "injected_delta": 1,
+      "detector_delta": 1,
+      "detected": true,
+      "severity": "low"
+    },
+    {
+      "injected_delta": 2,
+      "detector_delta": 2,
+      "detected": true,
+      "severity": "high"
+    },
+    {
+      "injected_delta": 3,
+      "detector_delta": 3,
+      "detected": true,
+      "severity": "high"
+    },
+    {
+      "injected_delta": 4,
+      "detector_delta": 4,
+      "detected": true,
+      "severity": "high"
+    },
+    {
+      "injected_delta": 5,
+      "detector_delta": 5,
+      "detected": true,
+      "severity": "high"
+    },
+    {
+      "injected_delta": 6,
+      "detector_delta": 6,
+      "detected": true,
+      "severity": "critical"
+    },
+    {
+      "injected_delta": 7,
+      "detector_delta": 7,
+      "detected": true,
+      "severity": "critical"
+    },
+    {
+      "injected_delta": 8,
+      "detector_delta": 8,
+      "detected": true,
+      "severity": "critical"
+    },
+    {
+      "injected_delta": 9,
+      "detector_delta": 9,
+      "detected": true,
+      "severity": "critical"
+    },
+    {
+      "injected_delta": 10,
+      "detector_delta": 10,
+      "detected": true,
+      "severity": "critical"
+    }
+  ],
+  "sc1_attribution": {
+    "accuracy": 0.5,
+    "cases": [
+      {
+        "scenario": "single_error",
+        "expected_root": "worker-b",
+        "attributed": "worker-b",
+        "correct": true
+      },
+      {
+        "scenario": "cascade_root_not_first",
+        "expected_root": "worker-a",
+        "attributed": "worker-c",
+        "correct": false,
+        "note": "limitation: attributes to first error span, not causal root"
+      }
+    ]
+  }
+}
