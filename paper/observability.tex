@@ -29,10 +29,13 @@
   xleftmargin=8pt,
 }
 
-\title{WatchTower: An Agent's Self-Report Is Not Ground Truth\\
-\large Trajectory- and Host-Level Forensics for Multi-Agent AI Systems}
+\title{WatchTower: Observation-First Forensics for Multi-Agent AI Systems\\
+\large Detecting Silent Failures and Report-vs-Reality Gaps When an
+Agent's Self-Report Is Not Ground Truth}
 
-\author{\IEEEauthorblockN{Anonymous Submission}\\Proof-of-Concept Artifact --- Under Review}
+\author{\IEEEauthorblockN{Rohit Jinsiwale}
+\IEEEauthorblockA{Proof-of-Concept Artifact\\
+\url{https://github.com/beejak/agentwatch}}}
 
 \begin{document}
 \maketitle
@@ -161,7 +164,11 @@ deterministic heuristic otherwise---so the pipeline and CI run with zero LLM dep
 We use frozen, human-labeled corpora; a held-out split; baselines head-to-head; and bootstrap
 $95\%$ confidence intervals. Baselines: \textbf{B1} self-report (flags only an explicit error
 span---the faithful upper bound of any self-report-trusting monitor) and \textbf{B2} a naive
-cost threshold. All numbers are reproducible from the released artifacts.
+cost threshold. All numbers are reproducible from the released artifacts: the synthetic corpus
+is \texttt{eval/corpus/traces\_v0.1.jsonl} (results \texttt{eval/results/traces\_v0.1\_test.json});
+the real-LLM corpus \texttt{eval/corpus/captured\_llm\_v0.1.jsonl}
+(\texttt{eval/results/captured\_llm\_test.json}); the envelope sweep
+\texttt{eval/results/sweep\_v0.1.json}.
 
 \begin{table}[t]
 \caption{Held-out synthetic corpus ($n{=}269$; 380-trace corpus).}
@@ -280,6 +287,17 @@ Treating an agent's self-report as untrusted---and reconciling it against the tr
 independent host view---catches silent failures and report-vs-reality gaps that
 self-report-based monitoring structurally cannot. We release the implementation, frozen
 corpora, and harness as a proof-of-concept artifact for reproduction and extension.
+
+\section*{Artifact Availability}
+All code, frozen corpora, results, and this paper are released at
+\url{https://github.com/beejak/agentwatch}. Reproduce: \texttt{make eval} (held-out synthetic,
+Table~\ref{tab:synth}), \texttt{python -m eval.sweep} (operating envelope, Table~\ref{tab:env}
+and Fig.~\ref{fig:env}), and \texttt{make capture-tier1-llm} (real LLM-driven capture,
+Table~\ref{tab:llm}). Data: \texttt{eval/corpus/traces\_v0.1.jsonl} ($n{=}380$) and
+\texttt{eval/corpus/captured\_llm\_v0.1.jsonl} ($n{=}120$); per-run metrics in
+\texttt{eval/results/*.json}; end-to-end demo output in \texttt{examples/sample\_output.json};
+methodology in \texttt{docs/TESTING.md} and \texttt{docs/REAL\_TRAFFIC\_VALIDATION.md}. The
+companion enforcement system is at \url{https://github.com/beejak/agentwatch-firewall}.
 
 \begin{thebibliography}{9}
 \bibitem{obsgap} ``The Observability Gap in LLM Coding Agents,'' arXiv:2603.26942, 2026.
