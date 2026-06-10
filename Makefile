@@ -1,5 +1,5 @@
 .PHONY: all infra-up infra-down infra-status infra-wait \
-        gate-all poc test benchmark eval capture-tier1 progress clean install \
+        gate-all poc test benchmark eval capture-tier1 demo progress clean install \
         api seed-sysmon langfuse-setup help
 
 PYTHON     = .venv/bin/python -m pytest
@@ -86,6 +86,10 @@ eval:
 capture-tier1:
 	.venv/bin/python -m eval.capture.run
 
+## End-to-end demo: emit Signals → Chronicle → SC1/SC2/SC3 forensic report
+demo:
+	.venv/bin/python -m examples.end_to_end
+
 ## Help
 help:
 	@echo "WatchTower — command reference"
@@ -105,6 +109,8 @@ help:
 	@echo "  make eval            SC2/SC3 detection vs baselines on the held-out corpus"
 	@echo ""
 	@echo "Run / data:"
+	@echo "  make demo            End-to-end: emit Signals → Chronicle → SC1/SC2/SC3 report"
+	@echo "  make capture-tier1   Capture real HTTP egress via mitmproxy into a frozen corpus"
 	@echo "  make api             Start the FastAPI server (http://localhost:8000/docs)"
 	@echo "  make seed-sysmon     Generate synthetic host-telemetry seed data"
 	@echo "  make progress        Show PROGRESS.md"
