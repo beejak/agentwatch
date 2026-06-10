@@ -151,7 +151,7 @@ Run it before every release. Save the report to `docs/TESTING_GAPS.md`.
             125/125  gate tests
 ✓  Tier 4:   DR ≥ 90%  FP ≤ 5%  no CRITICAL gaps
 ─────────────────────────────────────────────────
-   TOTAL:  207/207 static + agentic tester green
+   TOTAL:  203/203 suite green (incl. agentic tester)
 ```
 
 ### Repo FAIL (not shippable)

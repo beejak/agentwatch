@@ -19,7 +19,7 @@
 *Trace every tool call. Attribute coordination failures. Catch silent failures and cross-layer discrepancies. Append-only forensic chronicle.*
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-195%20passing-22c55e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-203%20passing-22c55e?style=flat-square)](#testing)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square)](LICENSE)
 [![ClickHouse](https://img.shields.io/badge/Chronicle-append--only-FFCC01?style=flat-square)](https://clickhouse.com)
 
@@ -72,7 +72,7 @@ pip install -e ".[dev]"
 # 3. Run all gate tests (one per layer, gate-first, stop on first failure)
 make gate-all
 
-# 4. Full suite (195 tests, with coverage)
+# 4. Full suite (203 tests, with coverage)
 make test
 
 # 5. Proof scenarios (SC1 coordination · SC2 silent failure · SC3 cross-layer)
@@ -91,7 +91,7 @@ make api          # http://localhost:8000/docs
 | `make gate-NN` | Single layer gate (e.g. `make gate-08`) |
 | `make gate-all` | All gates in order, stop on first failure |
 | `make poc` | SC1 + SC2 + SC3 proof scenarios |
-| `make test` | Full suite (195 passing) with coverage |
+| `make test` | Full suite (203 passing) with coverage |
 | `make benchmark` | LangSmith gap comparison |
 
 CI runs the gates and proof scenarios against live Redis / ClickHouse / Postgres / Neo4j service containers on every push and PR.
