@@ -152,9 +152,9 @@ false-positives on expensive-but-correct work).
 
 A DeepSeek agent (ReAct loop) acts against tasks; tools make real HTTP egress through an
 independent proxy. SC2 (the model genuinely loops) and SC3 (a compromised tool's hidden egress)
-**emerge** from the model's behavior. On the captured corpus, WatchTower detects SC2 and SC3 at
-**1.00** with **0.00** FP and the self-report baseline at **0.00** — H3 confirmed on real,
-emergent traffic. *(The 1.00 reflects a clean signal once the condition occurs; §6.1's 0.86 —
+**emerge** from the model's behavior. On the captured corpus (**n=120; 40/class**), WatchTower
+detects SC2 and SC3 at **1.00** with **0.00** FP and the self-report baseline at **0.00** — H3
+confirmed on real, emergent traffic. *(The 1.00 reflects a clean signal once the condition occurs; §6.1's 0.86 —
 which includes borderline cases — is the conservative headline.)*
 
 ---
