@@ -1,0 +1,27 @@
+{
+  "sc1_attribution": {
+    "trace_id": "demo-coord-12fccc",
+    "failing_agent": "worker-b",
+    "failing_action": "tool_use",
+    "call_tree_depth": 2,
+    "mast_category": 2,
+    "signature_name": "Conflicting Parallel Outputs",
+    "fix_direction": "Add consensus/merge step; define conflict resolution strategy",
+    "confidence": 1.0
+  },
+  "sc2_silent_failure": {
+    "trace_id": "demo-silent-1fd47f",
+    "pattern": "infinite_retry_loop",
+    "evidence": "12 spans, summary 'retrying fetch(status=pending)' repeated 12 times, no errors (silent)",
+    "cost_anomaly_ratio": 222.2222222222222,
+    "detected": true
+  },
+  "sc3_cross_layer": {
+    "trace_id": "demo-xlayer-48a536",
+    "agent_reported_calls": 1,
+    "host_observed_calls": 3,
+    "delta": 2,
+    "severity": "high",
+    "evidence": "Host observed 3 connections but agent only reported 1 (delta=2, potential undisclosed activity)"
+  }
+}

@@ -190,6 +190,39 @@ make api          # http://localhost:8000/docs
 
 ---
 
+## Instrument an agent + see it work
+
+**Emit signals** from any agent with the SDK (`watchtower/emitter.py`):
+
+```python
+from watchtower.emitter import SignalEmitter
+
+em = await SignalEmitter("orchestrator").start()      # sink="chronicle" (default) or "redis"
+root = await em.emit("delegate", trace_id=t, summary="plan + fan out")
+await em.emit("tool_use", trace_id=t, agent_id="worker-b",
+              parent_span_id=root.span_id, status="error", summary="schema mismatch")
+await em.flush()
+```
+
+Signals are HMAC-signed. `sink="redis"` publishes to the `wt:signals` stream (the production
+Receiver path); `sink="chronicle"` writes straight to the append-only store.
+
+**Run the end-to-end demo** (needs ClickHouse) — emits a 3-agent scenario and prints the
+forensic answers an output-level monitor can't:
+
+```bash
+make demo
+```
+```
+SC1 coordination-failure attribution → failing agent: worker-b (Conflicting Parallel Outputs)
+SC2 silent-failure detection         → infinite_retry_loop (12 spans, no errors)
+SC3 cross-layer discrepancy          → agent reported 1, host observed 3, delta 2 (high)
+```
+Full report saved to [`examples/sample_output.json`](examples/sample_output.json). Validation
+data lives in `eval/` (frozen corpora + held-out metrics); see [`docs/TESTING.md`](docs/TESTING.md).
+
+---
+
 ## Testing
 
 | Command | Scope |
