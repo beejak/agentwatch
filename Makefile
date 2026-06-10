@@ -1,5 +1,5 @@
 .PHONY: all infra-up infra-down infra-status infra-wait \
-        gate-all poc test benchmark eval progress clean install \
+        gate-all poc test benchmark eval capture-tier1 progress clean install \
         api seed-sysmon langfuse-setup help
 
 PYTHON     = .venv/bin/python -m pytest
@@ -81,6 +81,10 @@ clean:
 ## Observability evaluation (SC2/SC3 vs baselines, held-out metrics)
 eval:
 	.venv/bin/python -m eval.harness --split test
+
+## Tier-1 real-traffic capture (real HTTP egress via mitmproxy → frozen corpus)
+capture-tier1:
+	.venv/bin/python -m eval.capture.run
 
 ## Help
 help:
