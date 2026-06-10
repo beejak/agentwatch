@@ -14,8 +14,10 @@ data/sysmon/*.xml
 data/telemetry/*.json
 store/
 .gstack/
-paper/watchtower.aux
-paper/watchtower.bbl
-paper/watchtower.blg
-paper/watchtower.log
-paper/watchtower.out
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
