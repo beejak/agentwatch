@@ -35,9 +35,11 @@ BOOTSTRAP_B = 2000
 BOOTSTRAP_SEED = 1729
 
 
-def load_corpus(split: str = "test") -> list[dict]:
-    recs = [json.loads(l) for l in CORPUS.read_text().splitlines() if l.strip()]
-    return recs if split == "all" else [r for r in recs if r["split"] == split]
+def load_corpus(split: str = "test", corpus_path: Path = CORPUS) -> list[dict]:
+    recs = [json.loads(l) for l in Path(corpus_path).read_text().splitlines() if l.strip()]
+    if split == "all":
+        return recs
+    return [r for r in recs if r.get("split", "test") == split]
 
 
 # ── baselines ────────────────────────────────────────────────────────────────
@@ -89,11 +91,11 @@ def _panel(labels, preds_by_detector):
     return out
 
 
-async def run_eval(split: str = "test") -> dict:
+async def run_eval(split: str = "test", corpus_path: Path = CORPUS) -> dict:
     from watchtower.analyst.silent import detect_silent_failure
     from watchtower.analyst.cross import check_cross_layer
 
-    traces = load_corpus(split)
+    traces = load_corpus(split, corpus_path)
     y_sc2, y_sc3 = [], []
     wt_sc2, wt_sc3, b1, b2 = [], [], [], []
     for t in traces:
@@ -105,7 +107,7 @@ async def run_eval(split: str = "test") -> dict:
         b2.append(b2_naive_cost(t))
 
     return {
-        "corpus": "traces_v0.1", "split": split, "n_traces": len(traces),
+        "corpus": Path(corpus_path).stem, "split": split, "n_traces": len(traces),
         "n_silent": sum(y_sc2), "n_cross": sum(y_sc3),
         "n_benign": sum(1 for t in traces if t["label"] == "benign"),
         "bootstrap_B": BOOTSTRAP_B,
@@ -135,9 +137,10 @@ def _print(res):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="test", choices=["test", "dev", "all"])
+    ap.add_argument("--corpus", default=str(CORPUS), help="path to a corpus .jsonl")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
-    res = asyncio.run(run_eval(args.split))
+    res = asyncio.run(run_eval(args.split, Path(args.corpus)))
     _print(res)
     out = Path(args.out) if args.out else RESULTS_DIR / f"{res['corpus']}_{res['split']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
