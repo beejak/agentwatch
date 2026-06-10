@@ -85,7 +85,7 @@ This is the genuine near-real-world test: emergent agent behavior, real egress, 
 observer. The verdict LLM judge (`watchtower/verdict/sources/llm_judge.py`) is likewise wired
 to a real LLM when `LLM_API_KEY` is set (heuristic stub otherwise).
 
-**Scaled run (`WT_CAPTURE_N=12` -> 36 traces, 12/class)** -> `eval/results/captured_llm_test.json`:
+**Scaled run (`WT_CAPTURE_N=40` -> 120 traces, 40/class)** -> `eval/results/captured_llm_test.json`:
 
 | panel | WatchTower recall | FPR | self-report baseline (B1) |
 |-------|------------------:|----:|--------------------------:|
