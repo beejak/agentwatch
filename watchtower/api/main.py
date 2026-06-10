@@ -7,6 +7,7 @@ from typing import Optional
 
 from fastapi import FastAPI
 
+from watchtower import config
 from watchtower.api.routers import traces, analyst, interceptor
 
 logger = logging.getLogger(__name__)
@@ -38,15 +39,11 @@ def set_analyst(analyst_manager):
 async def lifespan(app: FastAPI):
     """Startup/shutdown (replaces deprecated @app.on_event)."""
     global _reader, _analyst_manager
-    import clickhouse_connect
     from watchtower.chronicle.reader import ChronicleReader
     from watchtower.chronicle.writer import ChronicleWriter
     from watchtower.analyst.manager import AnalystManager
     from watchtower.api.routers.interceptor import _interceptor
-    ch = clickhouse_connect.get_client(
-        host="localhost", port=8123,
-        database="watchtower", username="wt", password="wt"
-    )
+    ch = config.clickhouse_client()
     _reader = ChronicleReader(client=ch)
     _analyst_manager = AnalystManager()
     writer = ChronicleWriter(client=ch)
@@ -78,11 +75,7 @@ async def health():
 
     # ClickHouse
     try:
-        import clickhouse_connect
-        client = clickhouse_connect.get_client(
-            host="localhost", port=8123,
-            database="watchtower", username="wt", password="wt"
-        )
+        client = config.clickhouse_client()
         client.query("SELECT 1")
         statuses["clickhouse"] = "ok"
         client.close()
@@ -92,7 +85,7 @@ async def health():
     # Redis
     try:
         import redis.asyncio as aioredis
-        r = await aioredis.from_url("redis://localhost:6379", decode_responses=True)
+        r = await aioredis.from_url(config.REDIS_URL, decode_responses=True)
         await r.ping()
         statuses["redis"] = "ok"
         await r.aclose()
@@ -102,7 +95,7 @@ async def health():
     # Neo4j
     try:
         from neo4j import AsyncGraphDatabase
-        driver = AsyncGraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "watchtower"))
+        driver = AsyncGraphDatabase.driver(config.NEO4J_URI, auth=(config.NEO4J_USER, config.NEO4J_PASS))
         async with driver.session() as session:
             await session.run("RETURN 1")
         statuses["neo4j"] = "ok"
@@ -113,7 +106,7 @@ async def health():
     # Postgres
     try:
         import asyncpg
-        conn = await asyncpg.connect("postgresql://wt:wt@localhost:5433/watchtower")
+        conn = await asyncpg.connect(config.PG_DSN)
         await conn.execute("SELECT 1")
         statuses["postgres"] = "ok"
         await conn.close()
