@@ -7,6 +7,7 @@ __pycache__/
 htmlcov/
 dist/
 build/
+eval/capture/proxy_flows.jsonl
 *.db
 *.sqlite
 data/sysmon/*.xml
