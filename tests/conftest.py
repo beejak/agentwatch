@@ -27,10 +27,9 @@ NEO4J_URI      = "bolt://localhost:7687"
 NEO4J_AUTH     = ("neo4j", "watchtower")
 HMAC_SECRET    = "watchtower-hmac-secret-change-in-prod"
 
-# ── Session-scoped event loop ─────────────────────────────────────────────────
-@pytest.fixture(scope="session")
-def event_loop_policy():
-    return asyncio.DefaultEventLoopPolicy()
+# Session-scoped async fixtures (redis_client, etc.) require a session-scoped event
+# loop — configured via asyncio_default_fixture_loop_scope in pyproject.toml.
+# (The old event_loop_policy fixture override was deprecated by pytest-asyncio.)
 
 # ── Infra fixtures ────────────────────────────────────────────────────────────
 @pytest.fixture(scope="session")
