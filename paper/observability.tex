@@ -10,6 +10,8 @@
 \usepackage{colortbl}
 \usepackage{listings}
 \usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{hyperref}
 \usepackage{microtype}
 \usepackage{balance}
@@ -177,8 +179,29 @@ Naive cost (B2)     & 0.27 & 0.07 & --- & --- \\
 \end{table}
 
 \noindent\textbf{H3 (the spine).} The self-report baseline has \textbf{0 recall} on both
-classes---it never sees the signal. \textsc{WatchTower} also beats naive cost (loops/entropy
-catch what pure cost misses; pure cost false-positives on expensive-but-correct work).
+classes---it never sees the signal (Fig.~\ref{fig:recall}). \textsc{WatchTower} also beats naive
+cost (loops/entropy catch what pure cost misses; pure cost false-positives on
+expensive-but-correct work).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, width=\columnwidth, height=4.4cm, ymin=0, ymax=1.08,
+  ylabel={recall}, symbolic x coords={SC2 (synthetic),SC3 (synthetic),SC2 (real LLM),SC3 (real LLM)},
+  xtick=data, x tick label style={rotate=18,anchor=east,font=\tiny}, bar width=5pt,
+  ymajorgrids, legend style={font=\tiny,at={(0.5,1.18)},anchor=south,legend columns=3}]
+\addplot coordinates {(SC2 (synthetic),0.86) (SC3 (synthetic),1.00) (SC2 (real LLM),1.00) (SC3 (real LLM),1.00)};
+\addplot coordinates {(SC2 (synthetic),0.00) (SC3 (synthetic),0.00) (SC2 (real LLM),0.00) (SC3 (real LLM),0.00)};
+\addplot coordinates {(SC2 (synthetic),0.27) (SC3 (synthetic),0.00) (SC2 (real LLM),0.00) (SC3 (real LLM),0.00)};
+\legend{WatchTower, Self-report (B1), Naive cost (B2)}
+\end{axis}
+\end{tikzpicture}
+\caption{Detection recall by detector, on held-out synthetic and real LLM-driven traffic.
+\textbf{H3:} the self-report baseline is structurally blind ($0.00$) across the board, while
+\textsc{WatchTower} detects.}
+\label{fig:recall}
+\end{figure}
 
 \begin{table}[t]
 \caption{Operating envelope---where detection holds and falls off.}
@@ -195,6 +218,24 @@ SC1 attribution & $0.50$: cascade exposes first-error $\neq$ causal-root \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=3.8cm, ymin=-0.15, ymax=1.25,
+  xlabel={retry-loop length}, ylabel={detected}, ytick={0,1},
+  xtick={4,6,8,10,12,14,16,18,20}, ymajorgrids, const plot, thick]
+\addplot+[mark=none] coordinates {(4,0)(6,0)(8,0)(9,0)(10,1)(12,1)(16,1)(20,1)};
+\draw[dashed,gray] (axis cs:10,-0.15)--(axis cs:10,1.25);
+\node[font=\tiny,gray,anchor=south west] at (axis cs:10,0.5) {threshold};
+\end{axis}
+\end{tikzpicture}
+\caption{SC2 operating envelope: silent-loop detection turns on at loop length $\geq 10$
+(shorter loops are honest misses). Token-burn fires at cost $\geq\$0.12$; SC3 fires at
+host$-$reported delta $\geq 1$ (negative delta---telemetry sampling---never fires).}
+\label{fig:env}
+\end{figure}
 
 \begin{table}[t]
 \caption{Near-real-world: real LLM agent, emergent traffic ($n{=}120$, 40/class).}
