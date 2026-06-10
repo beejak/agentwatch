@@ -1,0 +1,106 @@
+{
+  "corpus": "captured_llm_v0.1",
+  "split": "test",
+  "n_traces": 36,
+  "n_silent": 12,
+  "n_cross": 12,
+  "n_benign": 12,
+  "bootstrap_B": 2000,
+  "generated_at": "2026-06-10T07:23:29Z",
+  "panels": {
+    "SC2_silent_failure": {
+      "watchtower": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "recall_ci95": [
+          1.0,
+          1.0
+        ],
+        "f1_ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "self_report_B1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 12,
+        "tn": 24,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "recall_ci95": [
+          0.0,
+          0.0
+        ],
+        "f1_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "naive_cost_B2": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 12,
+        "tn": 24,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "recall_ci95": [
+          0.0,
+          0.0
+        ],
+        "f1_ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "SC3_cross_layer": {
+      "watchtower": {
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "tn": 24,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0,
+        "recall_ci95": [
+          1.0,
+          1.0
+        ],
+        "f1_ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "self_report_B1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 12,
+        "tn": 24,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "recall_ci95": [
+          0.0,
+          0.0
+        ],
+        "f1_ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    }
+  }
+}

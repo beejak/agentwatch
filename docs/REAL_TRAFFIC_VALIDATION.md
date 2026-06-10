@@ -85,6 +85,21 @@ This is the genuine near-real-world test: emergent agent behavior, real egress, 
 observer. The verdict LLM judge (`watchtower/verdict/sources/llm_judge.py`) is likewise wired
 to a real LLM when `LLM_API_KEY` is set (heuristic stub otherwise).
 
+**Scaled run (`WT_CAPTURE_N=12` -> 36 traces, 12/class)** -> `eval/results/captured_llm_test.json`:
+
+| panel | WatchTower recall | FPR | self-report baseline (B1) |
+|-------|------------------:|----:|--------------------------:|
+| SC2 silent_failure | 1.00 [1.00, 1.00] | 0.00 | 0.00 |
+| SC3 cross_layer    | 1.00 [1.00, 1.00] | 0.00 | 0.00 |
+
+**Honest read (for the paper's section 6):** the 1.00 reflects that *once the injected
+condition occurs the signal is clean* (the model genuinely looped >=10 steps; the compromised
+tool made 3 calls vs 1 reported). The emergent part is the model's behavior; the failure signal
+is strong. So the conservative headline is the **synthetic 0.86** (which includes borderline /
+hard cases); the LLM-driven 1.00 confirms the mechanism on real, emergent traffic but is not a
+hard benchmark. Scale further and add ambiguous / partial-under-report scenarios before any
+headline claim.
+
 **Mode B Tier-2 (full surface) — bridge built & unit-tested; live capture needs privileges.**
 `eval/capture/ebpf_bridge.py` maps Tetragon/Falco kernel events → `host_event`s (with native
 PID attribution); covered by `tests/eval/test_ebpf_bridge.py`. Running the *collector* needs a
