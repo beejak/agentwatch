@@ -124,7 +124,10 @@ flowchart TD
 - **Python 3.12** + the package (`pip install -e ".[dev]"` in a venv).
 - **Backing services** (via `docker compose up -d`, or equivalents): Redis, ClickHouse,
   PostgreSQL, Neo4j. (A rootless single-binary ClickHouse suffices for the chronicle tests.)
-- **`WT_HMAC_SECRET`** shared between emitting agents and the Receiver.
+- **Config is env-driven** (`watchtower/config.py`): point at any infrastructure via
+  `CH_HOST`/`CH_PORT`/`CH_DB`/`CH_USER`/`CH_PASS`, `REDIS_URL`, `PG_DSN`,
+  `NEO4J_URI`/`NEO4J_USER`/`NEO4J_PASS`, and `WT_HMAC_SECRET` (shared between emitting agents
+  and the Receiver). Defaults match docker-compose for zero-config local dev.
 - **Agent-side emitter**: agents must publish `Signal`s to `wt:signals` (an OTel exporter or
   the lightweight emitter in `agents/synthetic/`).
 - **Optional**: an OpenAI-compatible `LLM_API_KEY` for the sampled verdict judge; host
