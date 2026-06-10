@@ -221,6 +221,12 @@ SC3 cross-layer discrepancy          → agent reported 1, host observed 3, delt
 Full report saved to [`examples/sample_output.json`](examples/sample_output.json). Validation
 data lives in `eval/` (frozen corpora + held-out metrics); see [`docs/TESTING.md`](docs/TESTING.md).
 
+**Near-real-world validation:** `make capture-tier1-llm` runs a **real LLM agent**
+(DeepSeek) whose emergent behavior generates real HTTP egress through mitmproxy (independent
+observer) — SC2/SC3 are detected on traffic that wasn't scripted. See
+[`docs/REAL_TRAFFIC_VALIDATION.md`](docs/REAL_TRAFFIC_VALIDATION.md). The verdict engine's
+LLM judge uses a real LLM when `LLM_API_KEY` is set (deterministic stub otherwise).
+
 ---
 
 ## Testing
