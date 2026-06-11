@@ -12,9 +12,9 @@ PYTHON = ../.venv/bin/python
 $(PAPER).pdf: $(PAPER).tex
 	@if command -v tectonic >/dev/null 2>&1; then \
 		echo "building with tectonic"; tectonic $(PAPER).tex; \
-		echo "normalizing xref (classic table) for GitHub rendering"; \
-		$(PYTHON) -c "from pypdf import PdfReader,PdfWriter;r=PdfReader('$(PAPER).pdf');w=PdfWriter();[w.add_page(p) for p in r.pages];w.write(open('$(PAPER).pdf','wb'))" \
-		  || echo "  (skipped: install pypdf to normalize; tectonic xref streams do not render on GitHub)"; \
+		echo "normalizing via qpdf/pikepdf (linearized) for GitHub rendering"; \
+		$(PYTHON) -c "import pikepdf;p=pikepdf.open('$(PAPER).pdf',allow_overwriting_input=True);p.save('$(PAPER).pdf',linearize=True)" \
+		  || echo "  (skipped: pip install pikepdf to normalize tectonic output for GitHub)"; \
 	else \
 		echo "building with pdflatex (classic xref)"; pdflatex $(PAPER) && pdflatex $(PAPER); \
 	fi
