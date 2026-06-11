@@ -1,0 +1,28 @@
+{
+  "n_traces": 380,
+  "total_spans": 5171,
+  "iters": 5,
+  "per_trace_ms": {
+    "SC1_attribution": {
+      "mean_ms": 0.1571,
+      "p50_ms": 0.1419,
+      "p99_ms": 0.2242
+    },
+    "SC2_silent": {
+      "mean_ms": 0.0308,
+      "p50_ms": 0.0288,
+      "p99_ms": 0.0346
+    },
+    "SC3_cross_layer": {
+      "mean_ms": 0.0163,
+      "p50_ms": 0.0162,
+      "p99_ms": 0.0188
+    }
+  },
+  "tier0_content_inspect_per_span": {
+    "mean_ms": 0.0248,
+    "p50_ms": 0.0211,
+    "p99_ms": 0.0352
+  },
+  "throughput_spans_per_sec_full_analysis": 66647
+}

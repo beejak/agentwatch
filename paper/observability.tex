@@ -12,6 +12,8 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
+\newcommand{\cmark}{\checkmark}
+\newcommand{\xmark}{\ensuremath{\times}}
 \usepackage{hyperref}
 \usepackage{microtype}
 \usepackage{balance}
@@ -198,7 +200,7 @@ expensive-but-correct work).
   ylabel={recall}, symbolic x coords={SC2 (synthetic),SC3 (synthetic),SC2 (real LLM),SC3 (real LLM)},
   xtick=data, x tick label style={rotate=18,anchor=east,font=\tiny}, bar width=5pt,
   ymajorgrids, legend style={font=\tiny,at={(0.5,1.18)},anchor=south,legend columns=3}]
-\addplot coordinates {(SC2 (synthetic),0.86) (SC3 (synthetic),1.00) (SC2 (real LLM),1.00) (SC3 (real LLM),1.00)};
+\addplot+[error bars/.cd, y dir=both, y explicit] coordinates {(SC2 (synthetic),0.86) +- (0,0.075) (SC3 (synthetic),1.00) +- (0,0) (SC2 (real LLM),1.00) +- (0,0) (SC3 (real LLM),1.00) +- (0,0)};
 \addplot coordinates {(SC2 (synthetic),0.00) (SC3 (synthetic),0.00) (SC2 (real LLM),0.00) (SC3 (real LLM),0.00)};
 \addplot coordinates {(SC2 (synthetic),0.27) (SC3 (synthetic),0.00) (SC2 (real LLM),0.00) (SC3 (real LLM),0.00)};
 \legend{WatchTower, Self-report (B1), Naive cost (B2)}
@@ -229,18 +231,26 @@ SC1 attribution & $0.50$: cascade exposes first-error $\neq$ causal-root \\
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
-\begin{axis}[
-  width=\columnwidth, height=3.8cm, ymin=-0.15, ymax=1.25,
-  xlabel={retry-loop length}, ylabel={detected}, ytick={0,1},
-  xtick={4,6,8,10,12,14,16,18,20}, ymajorgrids, const plot, thick]
-\addplot+[mark=none] coordinates {(4,0)(6,0)(8,0)(9,0)(10,1)(12,1)(16,1)(20,1)};
-\draw[dashed,gray] (axis cs:10,-0.15)--(axis cs:10,1.25);
-\node[font=\tiny,gray,anchor=south west] at (axis cs:10,0.5) {threshold};
+\begin{axis}[width=0.54\columnwidth,height=3.3cm,ymin=-0.15,ymax=1.25,
+  xlabel={\scriptsize loop length},ylabel={\scriptsize detected},ytick={0,1},
+  xtick={4,10,16},tick label style={font=\tiny},ymajorgrids,const plot,thick,
+  title={\scriptsize SC2 silent loop}]
+\addplot+[mark=none] coordinates {(4,0)(8,0)(9,0)(10,1)(12,1)(20,1)};
+\draw[dashed,gray](axis cs:10,-0.15)--(axis cs:10,1.25);
+\end{axis}
+\end{tikzpicture}\hfill
+\begin{tikzpicture}
+\begin{axis}[width=0.54\columnwidth,height=3.3cm,ymin=-0.15,ymax=1.25,
+  xlabel={\scriptsize host$-$reported delta},ytick={0,1},
+  xtick={-2,0,1,5,10},tick label style={font=\tiny},ymajorgrids,const plot,thick,
+  title={\scriptsize SC3 cross-layer}]
+\addplot+[mark=none] coordinates {(-3,0)(-1,0)(0,0)(1,1)(5,1)(10,1)};
+\draw[dashed,gray](axis cs:1,-0.15)--(axis cs:1,1.25);
 \end{axis}
 \end{tikzpicture}
-\caption{SC2 operating envelope: silent-loop detection turns on at loop length $\geq 10$
-(shorter loops are honest misses). Token-burn fires at cost $\geq\$0.12$; SC3 fires at
-host$-$reported delta $\geq 1$ (negative delta---telemetry sampling---never fires).}
+\caption{Operating envelopes. SC2 silent-loop detection turns on at loop length $\geq 10$
+(shorter loops are honest misses); SC3 fires at host$-$reported delta $\geq 1$ and never on
+negative delta (telemetry sampling). Token-burn fires at cost $\geq\$0.12$.}
 \label{fig:env}
 \end{figure}
 
@@ -265,6 +275,70 @@ SC3 (a compromised tool's hidden egress) \emph{emerge} from the model's behavior
 scripted. Table~\ref{tab:llm} confirms H3 on real traffic. The $1.00$ reflects a clean signal
 once the condition occurs; the conservative headline is the synthetic $0.86$ of
 Table~\ref{tab:synth}, which includes borderline cases.
+
+\subsection{Comparison to existing monitoring}
+\begin{table}[t]
+\caption{Capability comparison (\cmark\ detects/provides; \xmark\ cannot).}
+\label{tab:compare}
+\centering\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Capability & WatchTower & LangSmith/Langfuse & Host EDR \\
+\midrule
+SC1 attribution (call-tree)  & \cmark & partial & \xmark \\
+SC2 silent failure           & \cmark & \xmark  & \xmark \\
+SC3 cross-layer discrepancy  & \cmark & \xmark  & \xmark$^\dagger$ \\
+Append-only forensic audit   & \cmark & \xmark  & partial \\
+Agent semantics              & \cmark & \cmark  & \xmark \\
+\bottomrule
+\end{tabular}
+\\[2pt]{\scriptsize $^\dagger$Host EDR sees host events but has no agent self-report to
+reconcile against.}
+\end{table}
+Trace/output monitors trust the self-report (no host view, no silent-failure model); host EDR
+sees the host but not agent intent. Only \textsc{WatchTower} reconciles the two
+(Table~\ref{tab:compare}).
+
+\subsection{Practicality}
+Detection is cheap and runs off the agent's hot path (Table~\ref{tab:overhead}, commodity CPU,
+no GPU/network): all detectors are sub-millisecond per trace, and a full SC1+SC2+SC3 pass
+sustains $\sim$66k spans/s.
+
+\begin{table}[t]
+\caption{Measured overhead (mean over the corpus; per trace unless noted).}
+\label{tab:overhead}
+\centering\footnotesize
+\begin{tabular}{lr}
+\toprule
+Stage & Latency \\
+\midrule
+SC1 attribution             & $0.16$\,ms \\
+SC2 silent failure          & $0.03$\,ms \\
+SC3 cross-layer             & $0.02$\,ms \\
+Tier-0 content inspect (per span) & $0.02$\,ms \\
+\midrule
+Full SC1+SC2+SC3 throughput & $66{,}600$ spans/s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Case study: what the dashboard hides}
+\begin{figure}[t]
+\centering\footnotesize
+\begin{tabular}{p{0.45\columnwidth}p{0.45\columnwidth}}
+\toprule
+\textbf{Output-level view} & \textbf{WatchTower forensic view} \\
+\midrule
+All spans \texttt{status=ok}; green dashboard; no alert. &
+\textbf{SC1:} failing agent \texttt{worker-b} (Conflicting Parallel Outputs).
+\textbf{SC2:} \texttt{infinite\_retry\_loop} (12 spans, no errors).
+\textbf{SC3:} reported 1, host observed 3 ($\Delta{=}2$, high). \\
+\bottomrule
+\end{tabular}
+\caption{The same three traces as a self-report monitor sees them (left) vs.\
+\textsc{WatchTower} (right). Verbatim from \texttt{examples/sample\_output.json}.}
+\label{fig:casestudy}
+\end{figure}
 
 \section{Discussion and Limitations}
 \begin{itemize}
