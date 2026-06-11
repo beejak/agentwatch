@@ -19,7 +19,7 @@
 *Trace every tool call. Attribute coordination failures. Catch silent failures and cross-layer discrepancies. Append-only forensic chronicle.*
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-203%20passing-22c55e?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-220%20passing-22c55e?style=flat-square)](#testing)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square)](LICENSE)
 [![ClickHouse](https://img.shields.io/badge/Chronicle-append--only-FFCC01?style=flat-square)](https://clickhouse.com)
 
@@ -178,7 +178,7 @@ pip install -e ".[dev]"
 # 3. Run all gate tests (one per layer, gate-first, stop on first failure)
 make gate-all
 
-# 4. Full suite (203 tests, with coverage)
+# 4. Full suite (220 tests, with coverage)
 make test
 
 # 5. Proof scenarios (SC1 coordination · SC2 silent failure · SC3 cross-layer)
@@ -236,7 +236,7 @@ LLM judge uses a real LLM when `LLM_API_KEY` is set (deterministic stub otherwis
 | `make gate-NN` | Single layer gate (e.g. `make gate-08`) |
 | `make gate-all` | All gates in order, stop on first failure |
 | `make poc` | SC1 + SC2 + SC3 proof scenarios |
-| `make test` | Full suite (203 passing) with coverage |
+| `make test` | Full suite (220 passing) with coverage |
 | `make benchmark` | LangSmith gap comparison |
 
 CI runs the gates and proof scenarios against live Redis / ClickHouse / Postgres / Neo4j service containers on every push and PR.
@@ -293,7 +293,27 @@ docs/                documentation suite
 
 ## Research paper
 
-The paper (observation-first agent security: taint propagation + semantic enforcement) lives in [`paper/`](paper/) and is replicated in the firewall repo. It spans both the observability and enforcement halves of the system; see the firewall repo for the enforcement implementation it evaluates.
+**Paper 1 — *WatchTower: Observation-First Forensics for Multi-Agent AI Systems*** (Rohit
+Jinsiwale) lives in [`paper/observability.pdf`](paper/observability.pdf). Its thesis: *an
+agent's self-report is not ground truth.* It is evaluated entirely on the frozen corpora and
+harness in this repo ([`eval/`](eval/)) — held-out splits, 2,000-sample bootstrap CIs.
+
+Headline results (from [`eval/results/`](eval/results/)):
+
+| Detector | WatchTower recall | Self-report baseline | Notes |
+|----------|------------------:|---------------------:|-------|
+| **SC2** silent failure — synthetic (n=269) | **0.86** [0.78–0.93] | 0.00 | precision 0.85, FPR 0.07; naive-cost baseline 0.27 |
+| **SC2** silent failure — real traffic (n=120) | **1.00** | 0.00 | live LLM agent captured behind an HTTP proxy |
+| **SC3** cross-layer discrepancy (n=269) | **1.00** [1.00–1.00] | 0.00 | precision 1.00 |
+
+**Overhead** (380 traces / 5,171 spans, single CPU core, no GPU): per-trace p99 — SC2 0.035 ms,
+SC3 0.019 ms, SC1 0.224 ms; **66,647 spans/sec** (inline-deployable). **Stated limitation:** SC1
+causal-root attribution ≈0.5 on cascade cases (attributes to first error span, not the true
+root). Social/announcement copy for the paper is in [`paper/SHARE.md`](paper/SHARE.md).
+
+> **Paper 2** (the combined observability + *enforcement* paper — taint propagation + semantic
+> enforcement) lives in the companion repo **[agentwatch-firewall](https://github.com/beejak/agentwatch-firewall)**,
+> alongside the enforcement implementation it evaluates.
 
 ---
 
@@ -301,12 +321,11 @@ The paper (observation-first agent security: taint propagation + semantic enforc
 
 ```bibtex
 @misc{watchtower2026,
-  title  = {WatchTower: Observation-First Agent Security —
-            Taint Propagation and Semantic Enforcement in Multi-Agent Systems},
-  author = {WatchTower Research},
+  title  = {WatchTower: Observation-First Forensics for Multi-Agent AI Systems},
+  author = {Rohit Jinsiwale},
   year   = {2026},
-  note   = {Under submission. Observability: https://github.com/beejak/agentwatch ·
-            Enforcement: https://github.com/beejak/agentwatch-firewall}
+  note   = {Under submission. Code + data: https://github.com/beejak/agentwatch ·
+            Enforcement (Paper 2): https://github.com/beejak/agentwatch-firewall}
 }
 ```
 
