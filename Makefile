@@ -1,5 +1,5 @@
 .PHONY: all infra-up infra-down infra-status infra-wait \
-        gate-all poc test benchmark eval sweep capture-tier1 capture-tier1-llm demo progress \
+        gate-all poc test benchmark eval sweep overhead capture-tier1 capture-tier1-llm demo progress \
         clean install api seed-sysmon langfuse-setup help
 
 PYTHON     = .venv/bin/python -m pytest
@@ -81,6 +81,10 @@ clean:
 ## Observability evaluation (SC2/SC3 vs baselines, held-out metrics)
 eval:
 	.venv/bin/python -m eval.harness --split test
+
+## Overhead / practicality benchmark (per-detector latency + throughput)
+overhead:
+	.venv/bin/python -m eval.overhead
 
 ## Operating-envelope sweeps (detection vs magnitude; where it holds + falls off)
 sweep:

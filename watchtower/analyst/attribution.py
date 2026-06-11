@@ -8,6 +8,18 @@ from pydantic import BaseModel
 
 from watchtower.coord_sigs.library import CoordSignatureLibrary, SignatureMatch
 
+# Cache the signature library across calls — loading it per call dominated SC1 latency.
+_DEFAULT_LIBRARY: Optional["CoordSignatureLibrary"] = None
+
+
+async def _get_default_library() -> "CoordSignatureLibrary":
+    global _DEFAULT_LIBRARY
+    if _DEFAULT_LIBRARY is None:
+        lib = CoordSignatureLibrary()
+        await lib.load()
+        _DEFAULT_LIBRARY = lib
+    return _DEFAULT_LIBRARY
+
 
 class AttributionAgent:
     """POC interface for attribution — wraps attribute_failure() function."""
@@ -42,7 +54,7 @@ async def attribute_failure(
     def _get(s, key, default=None):
         return s.get(key, default) if isinstance(s, dict) else getattr(s, key, default)
 
-    lib = library or CoordSignatureLibrary()
+    lib = library or await _get_default_library()
     if not lib._loaded:
         await lib.load()
     matches = await lib.match_topology(spans)
